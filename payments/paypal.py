@@ -159,12 +159,19 @@ def _make_api_request(endpoint, method="GET", json_data=None, access_token=None)
         with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT_SECONDS) as resp:
             status_code = resp.getcode()
             raw = resp.read().decode("utf-8")
+            data = {}
             if raw:
                 try:
-                    return json.loads(raw)
+                    data = json.loads(raw)
                 except Exception:
-                    return {"raw": raw}
-            return {"status_code": status_code}
+                    data = {"raw": raw}
+            if not isinstance(data, dict):
+                data = {"data": data}
+            loc = resp.headers.get("Location")
+            if loc:
+                data["_location"] = loc
+            data["_status_code"] = status_code
+            return data
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="replace")
         try:
@@ -286,12 +293,17 @@ def create_draft_invoice(deal, recipient_email, amount, currency="USD", descript
 
     paypal_id = resp.get("id")
     if not paypal_id:
-        # Check href in links
-        for lk in resp.get("links", []):
-            if lk.get("rel") == "self":
-                href = lk.get("href", "")
-                paypal_id = href.rstrip("/").split("/")[-1]
-                break
+        # Check if resp itself is the link object (PayPal v2 returns {"rel": "self", "href": ".../INV2-XXXX"})
+        if "href" in resp:
+            paypal_id = resp["href"].rstrip("/").split("/")[-1]
+        elif "links" in resp:
+            for lk in resp.get("links", []):
+                if lk.get("rel") == "self":
+                    href = lk.get("href", "")
+                    paypal_id = href.rstrip("/").split("/")[-1]
+                    break
+        elif "_location" in resp:
+            paypal_id = resp["_location"].rstrip("/").split("/")[-1]
 
     if not paypal_id:
         raise PayPalAPIError("PayPal invoice creation succeeded but no invoice ID was returned.")
