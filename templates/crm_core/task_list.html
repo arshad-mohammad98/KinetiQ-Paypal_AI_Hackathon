@@ -1,0 +1,420 @@
+{% extends "app_base.html" %}
+
+{% block title %}Tasks{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nav-pills-crm .nav-link {
+        color: #475569;
+        font-weight: 500;
+        border-radius: 8px;
+        padding: 8px 16px;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .nav-pills-crm .nav-link.active {
+        background-color: var(--crm-accent);
+        color: #FFFFFF;
+    }
+    .nav-pills-crm .nav-link:hover:not(.active) {
+        background-color: #F1F5F9;
+        color: var(--crm-primary);
+    }
+    .task-card-mobile {
+        background: #FFFFFF;
+        border: 1px solid var(--crm-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .task-overdue-row {
+        background-color: rgba(239, 68, 68, 0.05);
+        border-left: 4px solid #EF4444 !important;
+    }
+    .task-today-row {
+        background-color: rgba(245, 158, 11, 0.07);
+        border-left: 4px solid #F59E0B !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">Tasks & Reminders</h2>
+            <p class="text-muted small mb-0">Track action items, calls, meetings, and follow-ups across your team.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if request.user.is_admin_or_owner %}
+                <a href="{% url 'task_export' %}?tab={{ tab|urlencode }}&q={{ query|urlencode }}&assigned={{ assigned_filter|urlencode }}&type={{ type_filter|urlencode }}" class="btn btn-outline-secondary btn-touch px-3" title="Export matching tasks to CSV">
+                    <i class="bi bi-download me-1"></i>
+                    <span>Export CSV</span>
+                </a>
+            {% endif %}
+            <a href="{% url 'task_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                <i class="bi bi-plus-lg me-1"></i> Add Task
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="card border-0 shadow-sm p-2 mb-4" style="border-radius: 12px;">
+        <ul class="nav nav-pills nav-pills-crm flex-nowrap overflow-auto" id="taskTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link text-nowrap {% if tab == 'my' %}active{% endif %}" href="?tab=my{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                    <i class="bi bi-person"></i> My Tasks
+                    <span class="badge rounded-pill {% if tab == 'my' %}bg-white text-dark{% else %}bg-secondary-subtle text-secondary{% endif %} ms-1">{{ my_tasks_count }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-nowrap {% if tab == 'all' %}active{% endif %}" href="?tab=all{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                    <i class="bi bi-list-task"></i> All Tasks
+                    <span class="badge rounded-pill {% if tab == 'all' %}bg-white text-dark{% else %}bg-secondary-subtle text-secondary{% endif %} ms-1">{{ all_tasks_count }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-nowrap {% if tab == 'overdue' %}active{% endif %}" href="?tab=overdue{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                    <i class="bi bi-exclamation-circle text-danger"></i> Overdue
+                    <span class="badge rounded-pill {% if tab == 'overdue' %}bg-white text-danger{% else %}bg-danger-subtle text-danger{% endif %} ms-1">{{ overdue_count }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-nowrap {% if tab == 'today' %}active{% endif %}" href="?tab=today{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                    <i class="bi bi-calendar-event text-warning"></i> Today
+                    <span class="badge rounded-pill {% if tab == 'today' %}bg-white text-dark{% else %}bg-warning-subtle text-warning-emphasis{% endif %} ms-1">{{ today_count }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-nowrap {% if tab == 'upcoming' %}active{% endif %}" href="?tab=upcoming{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                    <i class="bi bi-calendar-range"></i> Upcoming
+                    <span class="badge rounded-pill {% if tab == 'upcoming' %}bg-white text-dark{% else %}bg-secondary-subtle text-secondary{% endif %} ms-1">{{ upcoming_count }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-nowrap {% if tab == 'done' %}active{% endif %}" href="?tab=done{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                    <i class="bi bi-check2-circle text-success"></i> Done
+                    <span class="badge rounded-pill {% if tab == 'done' %}bg-white text-dark{% else %}bg-secondary-subtle text-secondary{% endif %} ms-1">{{ done_count }}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Search & Filters Row -->
+    <div class="card border-0 shadow-sm p-3 mb-4" style="border-radius: 12px;">
+        <form method="get" class="row g-2 align-items-center">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            
+            <!-- Search Box -->
+            <div class="col-12 col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Search tasks, notes, contacts..." value="{{ query }}">
+                </div>
+            </div>
+
+            <!-- Filter by Assigned Person -->
+            <div class="col-6 col-md-3">
+                <select name="assigned" class="form-select form-select-sm" style="min-height: 40px;" onchange="this.form.submit()">
+                    <option value="">All Team Members</option>
+                    {% for member in team_members %}
+                        <option value="{{ member.id }}" {% if assigned_filter == member.id|stringformat:"s" %}selected{% endif %}>
+                            {{ member.first_name }} {{ member.last_name }}
+                        </option>
+                    {% endfor %}
+                    <option value="unassigned" {% if assigned_filter == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                </select>
+            </div>
+
+            <!-- Filter by Type -->
+            <div class="col-6 col-md-3">
+                <select name="type" class="form-select form-select-sm" style="min-height: 40px;" onchange="this.form.submit()">
+                    <option value="">All Task Types</option>
+                    {% for code, label in task_types %}
+                        <option value="{{ code }}" {% if type_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary btn-touch flex-grow-1" style="min-height: 40px;">
+                    Filter
+                </button>
+                {% if query or assigned_filter or type_filter %}
+                    <a href="?tab={{ tab }}" class="btn btn-outline-secondary btn-touch px-3" title="Clear Filters" style="min-height: 40px;">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Tasks Content Area -->
+    {% if page_obj %}
+        <!-- Desktop / Tablet Table View (>= 768px) -->
+        <div class="card border-0 shadow-sm d-none d-md-block" style="border-radius: 14px; overflow: hidden;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>Task Title</th>
+                            <th>Type</th>
+                            <th>Due Date & Time</th>
+                            <th>Contact / Deal</th>
+                            <th>Assigned To</th>
+                            <th class="text-end" style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in page_obj %}
+                            <tr class="{% if task.is_overdue %}task-overdue-row{% elif task.is_due_today %}task-today-row{% endif %}">
+                                <!-- One-tap Mark Done Button -->
+                                <td>
+                                    <form method="post" action="{% url 'task_toggle_done' task.id %}">
+                                        {% csrf_token %}
+                                        {% if task.is_completed %}
+                                            <button type="submit" class="btn btn-sm btn-success rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" title="Undo (Mark Incomplete)">
+                                                <i class="bi bi-check-lg fs-5"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" title="Mark Done">
+                                                <i class="bi bi-circle fs-5"></i>
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </td>
+
+                                <!-- Title -->
+                                <td>
+                                    <div class="fw-semibold {% if task.is_completed %}text-decoration-line-through text-muted{% else %}text-dark{% endif %}">
+                                        {{ task.title }}
+                                    </div>
+                                    {% if task.notes %}
+                                        <div class="text-muted small text-truncate" style="max-width: 300px;">
+                                            {{ task.notes }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Type Badge -->
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary small">
+                                        {% if task.task_type == 'CALL' %}
+                                            <i class="bi bi-telephone me-1"></i> Call
+                                        {% elif task.task_type == 'MEETING' %}
+                                            <i class="bi bi-calendar-event me-1"></i> Meeting
+                                        {% elif task.task_type == 'EMAIL' %}
+                                            <i class="bi bi-envelope me-1"></i> Email
+                                        {% else %}
+                                            <i class="bi bi-check2-square me-1"></i> To-do
+                                        {% endif %}
+                                    </span>
+                                </td>
+
+                                <!-- Due Date & Time -->
+                                <td>
+                                    {% if task.due_date %}
+                                        <div class="{% if task.is_overdue %}text-danger fw-bold{% elif task.is_due_today %}text-warning-emphasis fw-bold{% else %}text-muted{% endif %} small">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            {{ task.due_date|date:"M d, Y" }}
+                                            {% if task.due_time %}
+                                                <span class="ms-1">at {{ task.due_time|time:"g:i A" }}</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if task.is_overdue %}
+                                            <span class="badge bg-danger text-white small">Overdue</span>
+                                        {% elif task.is_due_today %}
+                                            <span class="badge bg-warning text-dark small">Due Today</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted small">&mdash;</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Contact / Deal -->
+                                <td class="small">
+                                    {% if task.contact %}
+                                        <div>
+                                            <a href="{% url 'contact_detail' task.contact.pk %}" class="text-decoration-none text-dark">
+                                                <i class="bi bi-person text-secondary me-1"></i> {{ task.contact.full_name }}
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                    {% if task.deal %}
+                                        <div>
+                                            <a href="{% url 'deal_update' task.deal.pk %}" class="text-decoration-none text-muted small">
+                                                <i class="bi bi-kanban text-secondary me-1"></i> {{ task.deal.title }}
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                    {% if not task.contact and not task.deal %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Assigned To -->
+                                <td class="small">
+                                    {% if task.assigned_to %}
+                                        <i class="bi bi-person-badge text-muted me-1"></i> {{ task.assigned_to.first_name }}
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Action Buttons -->
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{% url 'task_update' task.id %}" class="btn btn-sm btn-outline-secondary" title="Edit Task">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if request.user.is_admin_or_owner %}
+                                            <a href="{% url 'task_delete' task.id %}" class="btn btn-sm btn-outline-danger" title="Delete Task">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Phone / Mobile Touch Cards (< 768px) -->
+        <div class="d-block d-md-none">
+            {% for task in page_obj %}
+                <div class="task-card-mobile {% if task.is_overdue %}border-danger bg-danger-subtle bg-opacity-10{% elif task.is_due_today %}border-warning bg-warning-subtle bg-opacity-10{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-secondary-subtle text-secondary small">
+                            {{ task.get_task_type_display }}
+                        </span>
+                        {% if task.is_overdue %}
+                            <span class="badge bg-danger text-white">Overdue</span>
+                        {% elif task.is_due_today %}
+                            <span class="badge bg-warning text-dark">Due Today</span>
+                        {% elif task.is_completed %}
+                            <span class="badge bg-success-subtle text-success">Done</span>
+                        {% endif %}
+                    </div>
+
+                    <h6 class="fw-bold mb-1 {% if task.is_completed %}text-decoration-line-through text-muted{% else %}text-dark{% endif %}">
+                        {{ task.title }}
+                    </h6>
+
+                    {% if task.notes %}
+                        <p class="text-muted small mb-2">{{ task.notes }}</p>
+                    {% endif %}
+
+                    <div class="text-muted small mb-3">
+                        {% if task.due_date %}
+                            <div>
+                                <i class="bi bi-calendar3 me-1"></i> {{ task.due_date|date:"M d, Y" }}
+                                {% if task.due_time %}at {{ task.due_time|time:"g:i A" }}{% endif %}
+                            </div>
+                        {% endif %}
+                        {% if task.contact %}
+                            <div><i class="bi bi-person me-1"></i> {{ task.contact.full_name }}</div>
+                        {% endif %}
+                        {% if task.deal %}
+                            <div><i class="bi bi-kanban me-1"></i> {{ task.deal.title }}</div>
+                        {% endif %}
+                        {% if task.assigned_to %}
+                            <div><i class="bi bi-person-badge me-1"></i> Assigned: {{ task.assigned_to.first_name }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Touch Actions -->
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <form method="post" action="{% url 'task_toggle_done' task.id %}" class="flex-grow-1">
+                            {% csrf_token %}
+                            {% if task.is_completed %}
+                                <button type="submit" class="btn btn-outline-secondary btn-touch w-100" style="min-height: 44px;">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Undo
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-success btn-touch w-100" style="min-height: 44px;">
+                                    <i class="bi bi-check-lg me-1"></i> Mark done
+                                </button>
+                            {% endif %}
+                        </form>
+                        <a href="{% url 'task_update' task.id %}" class="btn btn-outline-primary btn-touch px-3" style="min-height: 44px;" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if request.user.is_admin_or_owner %}
+                            <a href="{% url 'task_delete' task.id %}" class="btn btn-outline-danger btn-touch px-3" style="min-height: 44px;" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav class="mt-4" aria-label="Task pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&tab={{ tab }}{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&tab={{ tab }}{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&tab={{ tab }}{% if query %}&q={{ query }}{% endif %}{% if assigned_filter %}&assigned={{ assigned_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <!-- Friendly Empty State -->
+        <div class="card border-0 shadow-sm p-5 text-center my-4" style="border-radius: 14px;">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 72px; height: 72px; background-color: #EEF2FF; color: var(--crm-accent); font-size: 2rem;">
+                <i class="bi bi-check2-all"></i>
+            </div>
+            <h4 class="fw-bold mb-2" style="color: var(--crm-primary);">No tasks due. Add one.</h4>
+            <p class="text-muted mb-4 mx-auto" style="max-width: 440px;">
+                You're all caught up for this view. Create a new task to stay organized and manage team reminders.
+            </p>
+            <div>
+                <a href="{% url 'task_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-plus-lg me-1"></i> Add Task
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

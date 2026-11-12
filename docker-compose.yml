@@ -1,0 +1,59 @@
+# ==============================================================================
+# KinetiQ CRM - PayPal AI Hackathon Demo Environment
+# NOTE: This docker-compose configuration is designed STRICTLY for hackathon
+# evaluation and local demonstration purposes.
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: kinetiq_demo_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_demo_password
+      MYSQL_DATABASE: crm_saas_db
+      MYSQL_USER: kinetiq_app
+      MYSQL_PASSWORD: kinetiq_demo_pwd
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_demo_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "kinetiq_app", "-pkinetiq_demo_pwd"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    container_name: kinetiq_demo_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_ENV: dev
+      DEBUG: "True"
+      DJANGO_SECRET_KEY: hackathon-demo-secret-key-not-for-production-use-1234567890
+      ALLOWED_HOSTS: "localhost,127.0.0.1,web"
+      SITE_URL: "http://127.0.0.1:8000"
+      DB_ENGINE: django.db.backends.mysql
+      DB_NAME: crm_saas_db
+      DB_USER: kinetiq_app
+      DB_PASSWORD: kinetiq_demo_pwd
+      DB_HOST: db
+      DB_PORT: 3306
+      # PayPal Sandbox Credentials (pass through or override in local .env)
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      # Kine AI Assistant Provider (Gemini / OpenAI API Key)
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gemini-1.5-flash}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_demo_data:
+

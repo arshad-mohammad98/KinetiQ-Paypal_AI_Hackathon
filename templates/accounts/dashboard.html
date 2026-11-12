@@ -1,0 +1,676 @@
+{% extends "app_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .k-card {
+        background: #FFFFFF;
+        border-radius: 12px;
+        border: 1px solid var(--crm-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .k-card:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+    .k-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+    .chart-container-box {
+        position: relative;
+        height: 270px;
+        width: 100%;
+    }
+    .activity-feed-item {
+        position: relative;
+        padding-left: 28px;
+        padding-bottom: 16px;
+    }
+    .activity-feed-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 24px;
+        bottom: 0;
+        width: 2px;
+        background-color: #E2E8F0;
+    }
+    .activity-dot {
+        position: absolute;
+        left: 4px;
+        top: 6px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 0 0 1px #CBD5E1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+    <!-- Top Dashboard Header & Controls -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">
+                Dashboard 👋
+            </h2>
+            <p class="text-muted mb-0 small">
+                Performance overview and agenda for <strong>{{ organization.name }}</strong>
+            </p>
+        </div>
+
+        <!-- Filter Form & Actions -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <form method="get" id="dashboardFiltersForm" class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Date Range Selector -->
+                <div class="input-group input-group-sm" style="width: auto;">
+                    <span class="input-group-text bg-white border-end-0 text-muted">
+                        <i class="bi bi-calendar3"></i>
+                    </span>
+                    <select name="period" id="periodSelect" class="form-select form-select-sm border-start-0 ps-0 fw-medium" onchange="this.form.submit()" style="min-height: 38px;">
+                        <option value="this_month" {% if period == 'this_month' %}selected{% endif %}>This month</option>
+                        <option value="last_30_days" {% if period == 'last_30_days' %}selected{% endif %}>Last 30 days</option>
+                        <option value="last_6_months" {% if period == 'last_6_months' %}selected{% endif %}>Last 6 months</option>
+                    </select>
+                </div>
+
+                <!-- Team Member Filter (Owner/Admin Only) -->
+                {% if is_admin_or_owner %}
+                    <div class="input-group input-group-sm" style="width: auto;">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <select name="member" id="memberSelect" class="form-select form-select-sm border-start-0 ps-0 fw-medium" onchange="this.form.submit()" style="min-height: 38px;">
+                            <option value="all" {% if not selected_member %}selected{% endif %}>All Team Members</option>
+                            {% for tm in team_members %}
+                                <option value="{{ tm.id }}" {% if selected_member and selected_member.id == tm.id %}selected{% endif %}>
+                                    {{ tm.full_name }} ({{ tm.get_role_display }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            </form>
+
+            <!-- Quick Action Add Deal -->
+            <a href="{% url 'deal_create' %}" class="btn btn-primary btn-sm btn-touch px-3" style="background-color: var(--crm-accent); border: none; min-height: 38px;">
+                <i class="bi bi-plus-lg"></i>
+                <span class="d-none d-sm-inline">Add Deal</span>
+            </a>
+            <a href="{% url 'task_create' %}" class="btn btn-outline-secondary btn-sm btn-touch px-3" style="min-height: 38px;">
+                <i class="bi bi-check2-square"></i>
+                <span class="d-none d-sm-inline">Add Task</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Filter Notice for Members -->
+    {% if not is_admin_or_owner %}
+        <div class="alert alert-light border py-2 px-3 mb-4 rounded-3 d-flex align-items-center gap-2 small text-muted">
+            <i class="bi bi-info-circle text-primary"></i>
+            <span>Showing your personal deals and tasks, alongside business-wide contacts.</span>
+        </div>
+    {% elif selected_member %}
+        <div class="alert alert-light border py-2 px-3 mb-4 rounded-3 d-flex align-items-center justify-content-between small text-muted">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-filter text-primary"></i>
+                <span>Filtered by team member: <strong>{{ selected_member.full_name }}</strong></span>
+            </div>
+            <a href="?period={{ period }}&member=all" class="text-decoration-none fw-semibold" style="color: var(--crm-accent);">Reset filter &times;</a>
+        </div>
+    {% endif %}
+
+    <!-- 1. SUMMARY CARDS ROW -->
+    <div class="row g-3 mb-4">
+        <!-- Card 1: Contacts -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="k-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Contacts</span>
+                    <div class="k-stat-icon" style="background-color: #EEF2FF; color: var(--crm-accent);">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-dark" id="totalContactsMetric">{{ total_contacts_count }}</h3>
+                <div class="d-flex align-items-center gap-1 small text-muted">
+                    <span class="badge bg-success-subtle text-success-emphasis fw-medium px-2 py-1">
+                        +{{ new_contacts_count }} new
+                    </span>
+                    <span class="text-truncate">in {{ period_label|lower }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Open Deals & Pipeline -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="k-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Open Pipeline</span>
+                    <div class="k-stat-icon" style="background-color: #E0F2FE; color: #0284C7;">
+                        <i class="bi bi-kanban-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-dark" id="openPipelineValueMetric">₹{{ total_open_pipeline_value|floatformat:2 }}</h3>
+                <div class="small text-muted">
+                    <span class="fw-semibold text-dark">{{ open_deals_count }}</span> open deal{{ open_deals_count|pluralize }} in pipeline
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Deals Won -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="k-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Deals Won</span>
+                    <div class="k-stat-icon" style="background-color: #ECFDF5; color: #10B981;">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-dark" id="dealsWonValueMetric">₹{{ deals_won_value|floatformat:2 }}</h3>
+                <div class="d-flex align-items-center gap-1 small text-muted">
+                    <span class="badge bg-success-subtle text-success-emphasis fw-medium px-2 py-1">
+                        {{ deals_won_count }} won
+                    </span>
+                    <span class="text-truncate">in {{ period_label|lower }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Tasks Overdue & Today -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="k-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Tasks Due</span>
+                    <div class="k-stat-icon" style="background-color: #FEF3C7; color: #D97706;">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-dark" id="tasksDueTodayMetric">{{ tasks_due_today_count }} <span class="fs-6 fw-normal text-muted">due today</span></h3>
+                <div class="small">
+                    {% if tasks_overdue_count > 0 %}
+                        <span class="badge bg-danger text-white fw-medium px-2 py-1" id="tasksOverdueBadge">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ tasks_overdue_count }} overdue
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success-subtle text-success-emphasis fw-medium px-2 py-1">
+                            0 overdue
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYPAL INVOICING CARDS ROW -->
+    <div class="row g-3 mb-4">
+        <!-- Card 1: Total Invoiced -->
+        <div class="col-12 col-md-4">
+            <div class="k-card p-3 h-100" style="border-left: 4px solid #0070BA !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Total Invoiced</span>
+                    <div class="k-stat-icon" style="background-color: #E0F2FE; color: #0070BA;">
+                        <i class="bi bi-paypal"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-dark" id="totalInvoicedMetric">${{ invoices_total_amount|floatformat:2 }}</h3>
+                <div class="d-flex align-items-center justify-content-between small text-muted">
+                    <span><strong class="text-dark">{{ invoices_total_count }}</strong> invoice{{ invoices_total_count|pluralize }} sent</span>
+                    <a href="{% url 'invoice_list' %}" class="text-decoration-none small fw-semibold" style="color: #0070BA;">View Invoices &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Paid & Collected -->
+        <div class="col-12 col-md-4">
+            <div class="k-card p-3 h-100" style="border-left: 4px solid #10B981 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Paid & Collected</span>
+                    <div class="k-stat-icon" style="background-color: #ECFDF5; color: #10B981;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-success" id="totalPaidMetric">${{ invoices_paid_amount|floatformat:2 }}</h3>
+                <div class="d-flex align-items-center justify-content-between small text-muted">
+                    <span><strong class="text-dark">{{ invoices_paid_count }}</strong> paid invoice{{ invoices_paid_count|pluralize }}</span>
+                    <span class="badge bg-success-subtle text-success fw-medium">Settled</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Awaiting Payment -->
+        <div class="col-12 col-md-4">
+            <div class="k-card p-3 h-100" style="border-left: 4px solid #F59E0B !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Awaiting Payment</span>
+                    <div class="k-stat-icon" style="background-color: #FEF3C7; color: #D97706;">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1 text-warning-emphasis" id="totalAwaitingMetric">${{ invoices_awaiting_amount|floatformat:2 }}</h3>
+                <div class="d-flex align-items-center justify-content-between small text-muted">
+                    <span><strong class="text-dark">{{ invoices_awaiting_count }}</strong> pending payment</span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis fw-medium">Unpaid</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. "TODAY" BOX: Agenda & Reminders (Overdue & Due-Today Tasks with One-Tap Completion) -->
+    <div class="card border-0 shadow-sm p-4 mb-4" id="todayRemindersBox" style="border-radius: 14px; border-left: 4px solid var(--crm-accent) !important; background: #FFFFFF;">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <div class="p-2 rounded-3" style="background-color: #EEF2FF; color: var(--crm-accent);">
+                    <i class="bi bi-calendar-check fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0" style="color: var(--crm-primary);">Today's Agenda & Reminders</h5>
+                    <div class="text-muted small">Overdue and tasks due today assigned to you</div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'task_create' %}" class="btn btn-outline-primary btn-sm btn-touch px-3">
+                    <i class="bi bi-plus-lg me-1"></i> Add Task
+                </a>
+                <a href="{% url 'task_list' %}?tab=today" class="btn btn-primary btn-sm btn-touch px-3" style="background-color: var(--crm-accent); border: none;">
+                    View All Tasks &rarr;
+                </a>
+            </div>
+        </div>
+
+        {% if today_and_overdue_tasks %}
+            <div class="d-flex flex-column gap-2">
+                {% for task in today_and_overdue_tasks %}
+                    <div class="p-3 rounded-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 {% if task.is_overdue %}border border-danger-subtle bg-danger-subtle bg-opacity-10{% elif task.is_due_today %}border border-warning-subtle bg-warning-subtle bg-opacity-10{% else %}border bg-light{% endif %}">
+                        <div class="d-flex align-items-start gap-3">
+                            <form method="post" action="{% url 'task_toggle_done' task.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success btn-touch rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;" title="Mark Done">
+                                    <i class="bi bi-check-lg fs-5"></i>
+                                </button>
+                            </form>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <a href="{% url 'task_update' task.id %}" class="fw-semibold text-dark text-decoration-none">
+                                        {{ task.title }}
+                                    </a>
+                                    <span class="badge bg-secondary-subtle text-secondary small">
+                                        {{ task.get_task_type_display }}
+                                    </span>
+                                    {% if task.is_overdue %}
+                                        <span class="badge bg-danger text-white small">Overdue</span>
+                                    {% elif task.is_due_today %}
+                                        <span class="badge bg-warning text-dark small">Due Today</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small mt-1 d-flex align-items-center gap-3 flex-wrap">
+                                    {% if task.due_date %}
+                                        <span><i class="bi bi-clock me-1"></i>{{ task.due_date|date:"M d, Y" }}{% if task.due_time %} at {{ task.due_time|time:"g:i A" }}{% endif %}</span>
+                                    {% endif %}
+                                    {% if task.contact %}
+                                        <span><i class="bi bi-person me-1"></i>{{ task.contact.full_name }}</span>
+                                    {% endif %}
+                                    {% if task.deal %}
+                                        <span><i class="bi bi-kanban me-1"></i>{{ task.deal.title }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ms-md-auto">
+                            <a href="{% url 'task_update' task.id %}" class="btn btn-sm btn-outline-secondary btn-touch px-3">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-check2-circle fs-2 text-success d-block mb-2"></i>
+                <h6 class="fw-bold mb-1 text-dark">You're all caught up!</h6>
+                <p class="small mb-0 text-muted">No overdue or pending tasks due today. Great job!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- 3. CHARTS ROW 1: Pipeline by Stage & Contacts by Status -->
+    <div class="row g-3 mb-4">
+        <!-- Chart 1: Pipeline by Stage (Bar Chart) -->
+        <div class="col-12 col-lg-7">
+            <div class="k-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Pipeline by Stage</h5>
+                        <div class="text-muted small">Total deal value per pipeline stage</div>
+                    </div>
+                    <a href="{% url 'deal_board' %}" class="btn btn-sm btn-outline-secondary btn-touch px-3" style="min-height: 32px;">
+                        <i class="bi bi-kanban me-1"></i> Board
+                    </a>
+                </div>
+
+                {% if pipeline_has_data %}
+                    <div class="chart-container-box">
+                        <canvas id="pipelineStageChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="p-3 rounded-circle bg-light d-inline-flex mb-3 text-muted">
+                            <i class="bi bi-kanban fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1 text-dark">Add your first deal to see your pipeline</h6>
+                        <p class="text-muted small mb-3">Track deal values as they progress from New to Won.</p>
+                        <a href="{% url 'deal_create' %}" class="btn btn-primary btn-sm btn-touch px-3" style="background-color: var(--crm-accent); border: none;">
+                            <i class="bi bi-plus-lg me-1"></i> Add First Deal
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Chart 3: Contacts by Status (Doughnut Chart) -->
+        <div class="col-12 col-lg-5">
+            <div class="k-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Contacts by Status</h5>
+                        <div class="text-muted small">Leads, Customers, and Inactive contacts</div>
+                    </div>
+                    <a href="{% url 'contact_list' %}" class="btn btn-sm btn-outline-secondary btn-touch px-3" style="min-height: 32px;">
+                        <i class="bi bi-people me-1"></i> All
+                    </a>
+                </div>
+
+                {% if contacts_has_data %}
+                    <div class="chart-container-box">
+                        <canvas id="contactStatusChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="p-3 rounded-circle bg-light d-inline-flex mb-3 text-muted">
+                            <i class="bi bi-people fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1 text-dark">No contacts added yet</h6>
+                        <p class="text-muted small mb-3">Add leads and customers to visualize status breakdown.</p>
+                        <a href="{% url 'contact_create' %}" class="btn btn-primary btn-sm btn-touch px-3" style="background-color: var(--crm-accent); border: none;">
+                            <i class="bi bi-plus-lg me-1"></i> Add Contact
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CHARTS ROW 2: Deals Won Per Month & Recent Activity -->
+    <div class="row g-3 mb-4">
+        <!-- Chart 2: Deals Won Per Month (Last 6 Months) -->
+        <div class="col-12 col-lg-7">
+            <div class="k-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Deals Won (Last 6 Months)</h5>
+                        <div class="text-muted small">Monthly closed revenue performance</div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success-emphasis fw-medium px-2 py-1">
+                        Monthly Trend
+                    </span>
+                </div>
+
+                {% if won_has_data %}
+                    <div class="chart-container-box">
+                        <canvas id="dealsWonMonthlyChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="p-3 rounded-circle bg-light d-inline-flex mb-3 text-muted">
+                            <i class="bi bi-trophy fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1 text-dark">No deals won in the last 6 months</h6>
+                        <p class="text-muted small mb-3">Move deals to the Won stage to build your revenue trend.</p>
+                        <a href="{% url 'deal_board' %}" class="btn btn-outline-primary btn-sm btn-touch px-3">
+                            <i class="bi bi-kanban me-1"></i> Open Pipeline
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Activity Feed (AuditLog) -->
+        <div class="col-12 col-lg-5">
+            <div class="k-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Recent Activity</h5>
+                        <div class="text-muted small">Latest business events and updates</div>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary small">Last 8</span>
+                </div>
+
+                {% if recent_activity %}
+                    <div class="activity-feed mt-2">
+                        {% for log in recent_activity %}
+                            <div class="activity-feed-item">
+                                <div class="activity-dot {% if log.action_type == 'CREATE' %}bg-success{% elif log.action_type == 'COMPLETE' %}bg-primary{% elif log.action_type == 'MOVE' %}bg-info{% elif log.action_type == 'DELETE' %}bg-danger{% else %}bg-secondary{% endif %}"></div>
+                                <div class="d-flex flex-column">
+                                    <div class="small text-dark fw-medium" style="line-height: 1.35;">
+                                        {{ log.human_sentence }}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.75rem; margin-top: 2px;">
+                                        <i class="bi bi-clock me-1"></i>{{ log.created_at|timesince }} ago &bull; {{ log.created_at|date:"M d, g:i A" }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-clock-history fs-2 d-block mb-2 text-muted"></i>
+                        <h6 class="fw-bold mb-1 text-dark">No activity recorded yet</h6>
+                        <p class="small mb-0 text-muted">Changes to contacts, deals, and tasks will appear here in real time.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js via CDN (No extra Python packages) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+{{ pipeline_chart_labels|json_script:"pipelineLabelsData" }}
+{{ pipeline_chart_values|json_script:"pipelineValuesData" }}
+{{ won_monthly_labels|json_script:"wonMonthlyLabelsData" }}
+{{ won_monthly_values|json_script:"wonMonthlyValuesData" }}
+{{ won_monthly_counts|json_script:"wonMonthlyCountsData" }}
+{{ contacts_status_labels|json_script:"contactStatusLabelsData" }}
+{{ contacts_status_values|json_script:"contactStatusValuesData" }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Indian Rupee currency formatter
+        const formatRupee = (val) => {
+            return "₹" + Number(val).toLocaleString("en-IN", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        };
+
+        // Common Chart.js font config
+        Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
+        Chart.defaults.color = "#64748B";
+
+        // 1. Pipeline by Stage Bar Chart
+        const pipelineCanvas = document.getElementById("pipelineStageChart");
+        if (pipelineCanvas) {
+            const pipelineLabels = JSON.parse(document.getElementById("pipelineLabelsData").textContent);
+            const pipelineValues = JSON.parse(document.getElementById("pipelineValuesData").textContent);
+
+            new Chart(pipelineCanvas, {
+                type: "bar",
+                data: {
+                    labels: pipelineLabels,
+                    datasets: [{
+                        label: "Deal Value",
+                        data: pipelineValues,
+                        backgroundColor: [
+                            "#4F46E5", // New (Indigo)
+                            "#0284C7", // Contacted (Sky)
+                            "#F59E0B", // Proposal (Amber)
+                            "#10B981", // Won (Emerald)
+                            "#94A3B8"  // Lost (Slate)
+                        ],
+                        borderRadius: 6,
+                        maxBarThickness: 45
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return "Value: " + formatRupee(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (val) {
+                                    return formatRupee(val);
+                                }
+                            },
+                            grid: {
+                                color: "#F1F5F9"
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Contacts by Status Doughnut Chart
+        const contactCanvas = document.getElementById("contactStatusChart");
+        if (contactCanvas) {
+            const contactLabels = JSON.parse(document.getElementById("contactStatusLabelsData").textContent);
+            const contactValues = JSON.parse(document.getElementById("contactStatusValuesData").textContent);
+
+            new Chart(contactCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: contactLabels,
+                    datasets: [{
+                        data: contactValues,
+                        backgroundColor: [
+                            "#4F46E5", // Lead (Indigo)
+                            "#10B981", // Customer (Emerald)
+                            "#94A3B8"  // Inactive (Slate)
+                        ],
+                        borderWidth: 2,
+                        borderColor: "#FFFFFF"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: {
+                                boxWidth: 12,
+                                padding: 16
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const val = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                    return ` ${context.label}: ${val} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: "65%"
+                }
+            });
+        }
+
+        // 3. Deals Won Monthly Chart
+        const wonCanvas = document.getElementById("dealsWonMonthlyChart");
+        if (wonCanvas) {
+            const wonLabels = JSON.parse(document.getElementById("wonMonthlyLabelsData").textContent);
+            const wonValues = JSON.parse(document.getElementById("wonMonthlyValuesData").textContent);
+            const wonCounts = JSON.parse(document.getElementById("wonMonthlyCountsData").textContent);
+
+            new Chart(wonCanvas, {
+                type: "bar",
+                data: {
+                    labels: wonLabels,
+                    datasets: [{
+                        label: "Revenue Won",
+                        data: wonValues,
+                        backgroundColor: "#10B981",
+                        hoverBackgroundColor: "#059669",
+                        borderRadius: 6,
+                        maxBarThickness: 45
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const idx = context.dataIndex;
+                                    const cnt = wonCounts[idx] || 0;
+                                    return [
+                                        "Revenue: " + formatRupee(context.parsed.y),
+                                        "Deals won: " + cnt
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (val) {
+                                    return formatRupee(val);
+                                }
+                            },
+                            grid: {
+                                color: "#F1F5F9"
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

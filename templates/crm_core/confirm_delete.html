@@ -1,0 +1,31 @@
+{% extends "app_base.html" %}
+
+{% block title %}Confirm Delete {{ type }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 600px; margin: 40px auto;">
+    <div class="card border-0 shadow-sm" style="border-radius: 14px;">
+        <div class="card-body p-4 p-md-5 text-center">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px; background-color: #FEE2E2; color: #DC2626; font-size: 1.8rem;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            
+            <h3 class="fw-bold text-danger mb-2">Delete {{ type }}?</h3>
+            <p class="text-muted mb-4">
+                Are you sure you want to permanently delete <strong>"{{ object }}"</strong>?
+                This action cannot be undone.
+            </p>
+
+            <form method="post" class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-touch px-4">
+                    <i class="bi bi-trash3-fill"></i> Yes, Delete {{ type }}
+                </button>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary btn-touch px-4">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

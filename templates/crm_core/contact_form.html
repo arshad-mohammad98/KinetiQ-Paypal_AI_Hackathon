@@ -1,0 +1,122 @@
+{% extends "app_base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 780px; margin: 20px auto;">
+    <div class="mb-3">
+        <a href="{% if contact %}{% url 'contact_detail' contact.pk %}{% else %}{% url 'contact_list' %}{% endif %}" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left"></i> Back to {% if contact %}Contact Detail{% else %}Contacts{% endif %}
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 14px;">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="p-3 rounded-3" style="background-color: #EEF2FF; color: var(--crm-accent); font-size: 1.5rem;">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0" style="color: var(--crm-primary);">{{ title }}</h3>
+                    <p class="text-muted small mb-0">Record personal and professional details for this contact.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Name Row -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">
+                            First Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">Last Name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Email & Phone -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                            Email <span class="text-danger">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label fw-semibold">Phone</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Job Title & Company -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.job_title.id_for_label }}" class="form-label fw-semibold">Job Title</label>
+                        {{ form.job_title }}
+                        {% if form.job_title.errors %}
+                            <div class="text-danger small mt-1">{{ form.job_title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.company.id_for_label }}" class="form-label fw-semibold">Company</label>
+                        {{ form.company }}
+                        {% if form.company.errors %}
+                            <div class="text-danger small mt-1">{{ form.company.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Status & Owner -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="{{ form.owner.id_for_label }}" class="form-label fw-semibold">Assigned Owner</label>
+                        {{ form.owner }}
+                        {% if form.owner.errors %}
+                            <div class="text-danger small mt-1">{{ form.owner.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                    <a href="{% if contact %}{% url 'contact_detail' contact.pk %}{% else %}{% url 'contact_list' %}{% endif %}" class="btn btn-outline-secondary btn-touch px-4">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                        <i class="bi bi-check2"></i> Save Contact
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

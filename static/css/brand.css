@@ -1,0 +1,145 @@
+/* ==========================================================================
+   KinetiQ Brand System & Light UI Refresh
+   ========================================================================== */
+
+:root {
+    --crm-font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --crm-font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --crm-primary: #0F172A;
+    --crm-primary-light: #1E293B;
+    --crm-accent: #4F46E5;
+    --crm-accent-hover: #4338CA;
+    --crm-accent-light: #EEF2FF;
+    --crm-accent-vibrant: #6366F1;
+    --crm-bg: #F8FAFC;
+    --crm-card-bg: #FFFFFF;
+    --crm-border: #E2E8F0;
+    --crm-border-subtle: #F1F5F9;
+    --crm-text-primary: #0F172A;
+    --crm-text-muted: #64748B;
+}
+
+body {
+    font-family: var(--crm-font-body);
+    background-color: var(--crm-bg);
+    color: var(--crm-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--crm-font-heading);
+    letter-spacing: -0.025em;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   Reusable Logo / Wordmark Component: KinetiQ
+   ========================================================================== */
+
+.kinetiq-wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    font-family: var(--crm-font-heading);
+    text-decoration: none !important;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    user-select: none;
+    vertical-align: middle;
+}
+
+.kinetiq-wordmark-light .kinetiq-wordmark-text {
+    color: var(--crm-primary);
+    font-weight: 700;
+}
+
+.kinetiq-wordmark-dark .kinetiq-wordmark-text {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.kinetiq-wordmark-q {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    margin-left: 0.5px;
+}
+
+.kinetiq-q-char {
+    font-size: 1.38em; /* ~1.4x size */
+    font-weight: 800;
+    line-height: 0.85;
+    position: relative;
+    top: -0.04em; /* slightly raised baseline */
+    display: inline-block;
+}
+
+.kinetiq-wordmark-light .kinetiq-q-char {
+    color: var(--crm-accent);
+}
+
+.kinetiq-wordmark-dark .kinetiq-q-char {
+    color: #818CF8;
+}
+
+/* Distinctive dynamic swoosh / tail on the Q */
+.kinetiq-q-tail {
+    position: absolute;
+    bottom: -0.05em;
+    right: -0.15em;
+    width: 0.38em;
+    height: 0.12em;
+    border-radius: 0.04em 0.14em 0.14em 0.04em;
+    transform: rotate(-22deg) skewX(-20deg);
+    pointer-events: none;
+}
+
+.kinetiq-wordmark-light .kinetiq-q-tail {
+    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+    box-shadow: 0 1px 2px rgba(79, 70, 229, 0.25);
+}
+
+.kinetiq-wordmark-dark .kinetiq-q-tail {
+    background: linear-gradient(135deg, #818CF8 0%, #A5B4FC 100%);
+    box-shadow: 0 1px 3px rgba(129, 140, 248, 0.4);
+}
+
+/* ==========================================================================
+   Design Refresh: Spacing & Rounded Modern Cards
+   ========================================================================== */
+
+.card, .auth-card, .feature-card {
+    border-radius: 16px !important;
+    border: 1px solid var(--crm-border);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+}
+
+.card-header {
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+    background-color: var(--crm-card-bg);
+    border-bottom: 1px solid var(--crm-border);
+    padding: 1.1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-footer {
+    border-bottom-left-radius: 16px !important;
+    border-bottom-right-radius: 16px !important;
+    background-color: var(--crm-card-bg);
+    border-top: 1px solid var(--crm-border);
+    padding: 1rem 1.5rem;
+}
+
+/* Polished buttons & interactive elements */
+.btn-touch, .btn-crm-primary, .btn-crm-outline {
+    border-radius: 10px;
+}
+
+.table-responsive {
+    border-radius: 14px;
+}
+

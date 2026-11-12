@@ -1,0 +1,225 @@
+{% extends "app_base.html" %}
+
+{% block title %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="mb-3">
+        <a href="{% url 'company_list' %}" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left"></i> Back to Companies
+        </a>
+    </div>
+
+    <!-- Company Header Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px;">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3" style="background-color: #EEF2FF; color: var(--crm-accent); font-size: 2rem;">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: var(--crm-primary);">{{ company.name }}</h2>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        {% if company.industry %}
+                            <span class="badge bg-light text-dark border">{{ company.industry }}</span>
+                        {% endif %}
+                        {% if company.city %}
+                            <span class="text-muted small"><i class="bi bi-geo-alt"></i> {{ company.city }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'contact_create' %}?company_id={{ company.pk }}" class="btn btn-primary btn-touch px-3" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-person-plus"></i> Add Contact
+                </a>
+                <a href="{% url 'company_update' company.pk %}" class="btn btn-outline-secondary btn-touch px-3">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                {% if request.user.is_admin_or_owner %}
+                    <a href="{% url 'company_delete' company.pk %}" class="btn btn-outline-danger btn-touch px-3">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row g-3 mt-3 pt-3 border-top">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Website</div>
+                <div>
+                    {% if company.website %}
+                        <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer" class="fw-semibold text-decoration-none" style="color: var(--crm-accent);">
+                            {{ company.website|truncatechars:30 }} <i class="bi bi-box-arrow-up-right small"></i>
+                        </a>
+                    {% else %}
+                        <span class="text-muted">&mdash;</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Phone</div>
+                <div>
+                    {% if company.phone %}
+                        <a href="tel:{{ company.phone }}" class="fw-semibold text-decoration-none text-dark">
+                            {{ company.phone }}
+                        </a>
+                    {% else %}
+                        <span class="text-muted">&mdash;</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">City</div>
+                <div class="fw-semibold">{{ company.city|default:"&mdash;" }}</div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Created Date</div>
+                <div class="fw-semibold">{{ company.created_at|date:"M d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linked Contacts Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0" style="color: var(--crm-primary);">
+            Contacts at {{ company.name }}
+            <span class="badge bg-secondary-subtle text-secondary fs-6">{{ contacts.count }}</span>
+        </h4>
+        <a href="{% url 'contact_create' %}?company_id={{ company.pk }}" class="btn btn-sm btn-outline-primary btn-touch" style="border-color: var(--crm-accent); color: var(--crm-accent);">
+            <i class="bi bi-plus-lg"></i> Add Contact
+        </a>
+    </div>
+
+    {% if contacts %}
+        <!-- Desktop Contacts Table (>= 768px) -->
+        <div class="card border-0 shadow-sm d-none d-md-block" style="border-radius: 12px; overflow: hidden;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #F8FAFC;">
+                        <tr>
+                            <th class="ps-4 py-3 text-secondary text-uppercase small fw-semibold">Name</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Job Title</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Email</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Phone</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Status</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Owner</th>
+                            <th class="pe-4 py-3 text-secondary text-uppercase small fw-semibold text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in contacts %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <a href="{% url 'contact_detail' contact.pk %}" class="fw-bold text-decoration-none" style="color: var(--crm-accent);">
+                                        {{ contact.full_name }}
+                                    </a>
+                                </td>
+                                <td class="py-3">{{ contact.job_title|default:"&mdash;" }}</td>
+                                <td class="py-3">
+                                    <a href="mailto:{{ contact.email }}" class="text-decoration-none text-dark">
+                                        {{ contact.email }}
+                                    </a>
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.phone %}
+                                        <a href="tel:{{ contact.phone }}" class="text-decoration-none text-dark">
+                                            {{ contact.phone }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.status == 'LEAD' %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis">Lead</span>
+                                    {% elif contact.status == 'CUSTOMER' %}
+                                        <span class="badge bg-success-subtle text-success-emphasis">Customer</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.owner %}
+                                        <span class="small fw-medium">{{ contact.owner.first_name }} {{ contact.owner.last_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    <div class="btn-group">
+                                        <a href="{% url 'contact_detail' contact.pk %}" class="btn btn-sm btn-outline-secondary" title="View Contact">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'contact_update' contact.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit Contact">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mobile Touch Cards (< 768px) -->
+        <div class="d-md-none d-flex flex-column gap-3">
+            {% for contact in contacts %}
+                <div class="card border-0 shadow-sm p-3" style="border-radius: 12px;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <a href="{% url 'contact_detail' contact.pk %}" class="fs-5 fw-bold text-decoration-none text-dark d-block">
+                                {{ contact.full_name }}
+                            </a>
+                            <div class="text-muted small">{{ contact.job_title|default:"No title specified" }}</div>
+                        </div>
+                        {% if contact.status == 'LEAD' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis">Lead</span>
+                        {% elif contact.status == 'CUSTOMER' %}
+                            <span class="badge bg-success-subtle text-success-emphasis">Customer</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="small text-muted mb-3 d-flex flex-column gap-1">
+                        <div><i class="bi bi-envelope me-1"></i> {{ contact.email }}</div>
+                        {% if contact.phone %}
+                            <div><i class="bi bi-telephone me-1"></i> {{ contact.phone }}</div>
+                        {% endif %}
+                        {% if contact.owner %}
+                            <div><i class="bi bi-person me-1"></i> Owner: {{ contact.owner.first_name }} {{ contact.owner.last_name }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <a href="{% url 'contact_detail' contact.pk %}" class="btn btn-sm btn-primary btn-touch flex-grow-1" style="background-color: var(--crm-accent); border: none;">
+                            View Contact
+                        </a>
+                        <a href="{% url 'contact_update' contact.pk %}" class="btn btn-sm btn-outline-secondary btn-touch px-3" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card border-0 shadow-sm text-center py-5 px-3" style="border-radius: 14px;">
+            <div class="card-body py-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px; background-color: #EEF2FF; color: var(--crm-accent); font-size: 1.5rem;">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <h5 class="fw-bold mb-1">No contacts at this company yet</h5>
+                <p class="text-muted mb-3 small">Link decision makers, managers, or representatives to {{ company.name }}.</p>
+                <a href="{% url 'contact_create' %}?company_id={{ company.pk }}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-person-plus me-1"></i> Add Contact
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% comment %}
+Kine AI Assistant Reusable Inline SVG Logo Component
+Supports:
+  option: 1, 2, or 3 (defaults to 1)
+  size: 24, 28, 32, 40, 48, 64, 128 (defaults to 28)
+  thinking: true / false (triggers pulse animation)
+  id_suffix: unique string for gradient IDs (defaults to forloop.counter or random)
+{% endcomment %}
+{% with opt=option|default:"1" sz=size|default:"28" sfx=id_suffix|default:"kine" is_thinking=thinking|default:False %}
+<svg class="kine-logo-svg{% if is_thinking %} kine-thinking-glow{% endif %}"
+     width="{{ sz }}" height="{{ sz }}" viewBox="0 0 64 64" fill="none"
+     xmlns="http://www.w3.org/2000/svg"
+     aria-label="Kine AI Logo" role="img">
+  <defs>
+    <!-- Option 1: Indigo-to-Navy Soft Gradient -->
+    <linearGradient id="kine-grad-1-{{ sfx }}" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="50%" stop-color="#4338CA"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+
+    <!-- Option 2: Slate-Navy Deep Dialogue Gradient -->
+    <linearGradient id="kine-grad-2-{{ sfx }}" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="40%" stop-color="#4338CA"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <!-- Option 3: Vibrant Indigo Prism Gradient -->
+    <linearGradient id="kine-grad-3-{{ sfx }}" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="45%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+
+    <!-- Spark Glow Gradients -->
+    <linearGradient id="kine-spark-grad-{{ sfx }}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#C7D2FE"/>
+    </linearGradient>
+  </defs>
+
+  {% if opt == "1" or opt == 1 %}
+    <!-- =================================================================== -->
+    <!-- OPTION 1: Chat-Stem & Radiant Spark K                               -->
+    <!-- Rounded-square avatar, vertical chat-stem with dialogue cusp,       -->
+    <!-- bold diagonal arms, and a radiant 4-point spark on the upper arm.   -->
+    <!-- =================================================================== -->
+    <rect width="64" height="64" rx="16" fill="url(#kine-grad-1-{{ sfx }})"/>
+    
+    <!-- Vertical Chat Stem with dialogue tail -->
+    <rect x="14" y="14" width="7" height="34" rx="3.5" fill="#FFFFFF"/>
+    <!-- Speech bubble pointer at base of stem -->
+    <path d="M 14 42 C 11 44 9 48 10 50 C 13 49.5 16 47.5 17.5 45 Z" fill="#FFFFFF"/>
+    
+    <!-- Lower Diagonal Leg of the K -->
+    <path d="M 23 31.5 L 43.5 49 C 44.8 50.1 46.8 49.8 47.8 48.4 C 48.7 47.1 48.4 45.3 47 44.2 L 28.5 28 Z" fill="#FFFFFF"/>
+    
+    <!-- Upper Diagonal Arm pointing to spark -->
+    <path d="M 23 31 L 37 19.5 C 38.2 18.5 39.5 18.2 40.5 19 C 41.5 19.8 41.5 21.2 40.2 22.3 L 28.5 33 Z" fill="#FFFFFF"/>
+    
+    <!-- Radiant 4-Point Spark at top-right -->
+    <path d="M 45 10 C 45 16 51 16 51 16 C 51 16 45 16 45 22 C 45 16 39 16 39 16 C 39 16 45 16 45 10 Z"
+          fill="url(#kine-spark-grad-{{ sfx }})"/>
+    <circle cx="45" cy="16" r="1.5" fill="#FFFFFF"/>
+
+  {% elif opt == "2" or opt == 2 %}
+    <!-- =================================================================== -->
+    <!-- OPTION 2: Dialogue Silhouette & Starburst K                         -->
+    <!-- Smooth speech bubble outline with integrated geometric 'K' mark     -->
+    <!-- and brilliant 4-point star accent.                                  -->
+    <!-- =================================================================== -->
+    <rect width="64" height="64" rx="16" fill="url(#kine-grad-2-{{ sfx }})"/>
+
+    <!-- Subtle dialogue bubble backdrop highlight -->
+    <path d="M 13 16 C 13 13.8 14.8 12 17 12 L 47 12 C 49.2 12 51 13.8 51 16 L 51 40 C 51 42.2 49.2 44 47 44 L 23 44 L 14 51 L 15 44 C 13.8 44 13 43.2 13 42 Z"
+          fill="rgba(255, 255, 255, 0.08)"/>
+
+    <!-- Left Pillar of K -->
+    <rect x="18" y="16" width="7" height="28" rx="3.5" fill="#FFFFFF"/>
+    <!-- Speech tail pointer -->
+    <path d="M 18 40 L 12 47 L 22 43 Z" fill="#FFFFFF"/>
+
+    <!-- Upper branch rising into spark -->
+    <path d="M 27 30 L 40 18.5 C 41.2 17.5 43 17.7 44 18.9 C 45 20.1 44.8 21.9 43.5 22.9 L 32 33 Z" fill="#FFFFFF"/>
+
+    <!-- Lower branch of K -->
+    <path d="M 27 29 L 42 43.5 C 43.2 44.6 45 44.4 46 43.2 C 47 42 46.8 40.2 45.5 39.1 L 32 26 Z" fill="#FFFFFF"/>
+
+    <!-- Brilliant Starburst Spark at (46, 15) -->
+    <path d="M 46 9 C 46 15 52 15 52 15 C 52 15 46 15 46 21 C 46 15 40 15 40 15 C 40 15 46 15 46 9 Z"
+          fill="#A5B4FC"/>
+    <circle cx="46" cy="15" r="1.6" fill="#FFFFFF"/>
+
+  {% else %}
+    <!-- =================================================================== -->
+    <!-- OPTION 3: Dynamic Prism Spark K                                     -->
+    <!-- Modern energetic angled facets forming a 'K' with chat cusp         -->
+    <!-- and radiant star burst.                                             -->
+    <!-- =================================================================== -->
+    <rect width="64" height="64" rx="16" fill="url(#kine-grad-3-{{ sfx }})"/>
+
+    <!-- Vertical Pillar with conversation curve -->
+    <path d="M 15 15 C 15 13.3 16.3 12 18 12 C 19.7 12 21 13.3 21 15 L 21 45 C 21 46.7 19.7 48 18 48 C 16.3 48 15 46.7 15 45 Z" fill="#FFFFFF"/>
+    <!-- Tail accent -->
+    <path d="M 15 42 Q 10 47 11 49 Q 15 48.5 17 45 Z" fill="#C7D2FE"/>
+
+    <!-- Dynamic Angle Chevron forming the K arms -->
+    <!-- Upper arm -->
+    <path d="M 24 31 L 39 17 C 40.3 15.8 42.3 16 43.3 17.3 C 44.3 18.6 44 20.6 42.7 21.6 L 29.5 34.5 Z" fill="url(#kine-spark-grad-{{ sfx }})"/>
+    
+    <!-- Lower arm -->
+    <path d="M 24 29 L 41 46 C 42.2 47.2 44.2 47.2 45.4 46 C 46.6 44.8 46.6 42.8 45.4 41.6 L 30 26 Z" fill="#FFFFFF"/>
+
+    <!-- Four-Point Star Sparkle at top vertex -->
+    <path d="M 44 8 C 44 14 50 14 50 14 C 50 14 44 14 44 20 C 44 14 38 14 38 14 C 38 14 44 14 44 8 Z"
+          fill="#FFFFFF"/>
+    <circle cx="44" cy="14" r="1.5" fill="#6366F1"/>
+  {% endif %}
+</svg>
+{% endwith %}

@@ -1,0 +1,427 @@
+{% extends "app_base.html" %}
+
+{% block title %}Deals Pipeline{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Pipeline Board Horizontal Layout & Swipeable Scroll */
+    .pipeline-board-container {
+        display: flex;
+        gap: 1.25rem;
+        overflow-x: auto;
+        padding-bottom: 2rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        min-height: calc(100vh - 280px);
+    }
+    .pipeline-column {
+        flex: 0 0 320px;
+        min-width: 300px;
+        max-width: 360px;
+        background-color: #F8FAFC;
+        border: 1px solid var(--crm-border);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        scroll-snap-align: start;
+        max-height: 80vh;
+    }
+    @media (max-width: 576px) {
+        .pipeline-column {
+            flex: 0 0 85vw;
+            min-width: 85vw;
+        }
+    }
+    .column-header {
+        padding: 1rem 1.25rem;
+        background: #FFFFFF;
+        border-bottom: 1px solid var(--crm-border);
+        border-top-left-radius: 14px;
+        border-top-right-radius: 14px;
+    }
+    .column-body {
+        padding: 1rem;
+        overflow-y: auto;
+        flex-grow: 1;
+        min-height: 150px;
+        transition: background-color 0.2s ease;
+    }
+    .column-body.drag-over {
+        background-color: #EEF2FF;
+        border: 2px dashed var(--crm-accent);
+        border-radius: 0 0 14px 14px;
+    }
+    .deal-card {
+        background: #FFFFFF;
+        border: 1px solid var(--crm-border);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.85rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        cursor: grab;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        position: relative;
+    }
+    .deal-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .deal-card.dragging {
+        opacity: 0.4;
+        cursor: grabbing;
+    }
+    .deal-title-link {
+        color: #0F172A;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        display: block;
+    }
+    .deal-title-link:hover {
+        color: var(--crm-accent);
+    }
+    .stat-badge {
+        background: #FFFFFF;
+        border: 1px solid var(--crm-border);
+        border-radius: 10px;
+        padding: 0.75rem 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">Deals Pipeline</h2>
+            <p class="text-muted small mb-0">Visualize and advance deals across your sales stages.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if request.user.is_admin_or_owner %}
+                <a href="{% url 'deal_export' %}{% if owner_filter %}?owner={{ owner_filter|urlencode }}{% endif %}" class="btn btn-outline-secondary btn-touch px-3" title="Export matching deals to CSV">
+                    <i class="bi bi-download me-1"></i>
+                    <span>Export CSV</span>
+                </a>
+            {% endif %}
+            <a href="{% url 'deal_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                <i class="bi bi-plus-lg me-1"></i> Add Deal
+            </a>
+        </div>
+    </div>
+
+    <!-- Top of Board Metrics & Filters -->
+    <div class="row g-3 align-items-center mb-4">
+        <div class="col-12 col-md-4 col-xl-3">
+            <div class="stat-badge shadow-sm d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3" style="background-color: #EEF2FF; color: var(--crm-accent); font-size: 1.5rem;">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Open Pipeline Value</div>
+                    <div class="fw-bold fs-5 text-dark">₹{{ total_open_pipeline_value|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4 col-xl-3">
+            <div class="stat-badge shadow-sm d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3" style="background-color: #ECFDF5; color: #059669; font-size: 1.5rem;">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Deals Won This Month</div>
+                    <div class="fw-bold fs-5 text-dark">{{ won_this_month }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter by Owner -->
+        <div class="col-12 col-md-4 col-xl-6 text-md-end">
+            <form method="get" class="d-inline-flex align-items-center gap-2 flex-wrap">
+                <label for="ownerFilter" class="small fw-semibold text-muted text-nowrap">Filter by Owner:</label>
+                <select name="owner" id="ownerFilter" class="form-select form-select-sm" style="min-width: 180px; width: auto; min-height: 40px;" onchange="this.form.submit()">
+                    <option value="">All Team Members</option>
+                    {% for member in team_members %}
+                        <option value="{{ member.id }}" {% if owner_filter == member.id|stringformat:"s" %}selected{% endif %}>
+                            {{ member.first_name }} {{ member.last_name }}
+                        </option>
+                    {% endfor %}
+                    <option value="unassigned" {% if owner_filter == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                </select>
+                {% if owner_filter %}
+                    <a href="{% url 'deal_board' %}" class="btn btn-sm btn-outline-secondary" title="Clear filter">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    {% if total_deals_count == 0 %}
+        <div class="card border-0 shadow-sm p-5 text-center my-4" style="border-radius: 14px;">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 72px; height: 72px; background-color: #EEF2FF; color: var(--crm-accent); font-size: 2rem;">
+                <i class="bi bi-kanban"></i>
+            </div>
+            <h4 class="fw-bold mb-2" style="color: var(--crm-primary);">Add your first deal</h4>
+            <p class="text-muted mb-4 mx-auto" style="max-width: 480px;">
+                Start tracking your sales operations. Add your first deal to track value, expected close dates, and sales velocity across your stages.
+            </p>
+            <div>
+                <a href="{% url 'deal_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-plus-lg me-1"></i> Add your first deal
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Pipeline Board Columns (Desktop Kanban & Mobile Swipeable List) -->
+        <div class="pipeline-board-container" id="pipelineBoard">
+            {% for col in columns %}
+                <div class="pipeline-column shadow-sm" data-stage-id="{{ col.stage.id }}">
+                    <!-- Column Header: Stage Name, Deal Count, and Total Column Value -->
+                    <div class="column-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold text-dark">{{ col.stage.name }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 small">
+                                {{ col.count }}
+                            </span>
+                        </div>
+                        <div class="small fw-semibold text-muted" title="Column Total Value">
+                            ₹{{ col.total_value|floatformat:2 }}
+                        </div>
+                    </div>
+
+                    <!-- Column Cards Drop Zone -->
+                    <div class="column-body stage-drop-zone" data-stage-id="{{ col.stage.id }}">
+                        {% for deal in col.deals %}
+                            <div class="deal-card" 
+                                 draggable="true" 
+                                 data-deal-id="{{ deal.id }}"
+                                 data-current-stage-id="{{ col.stage.id }}"
+                                 id="dealCard-{{ deal.id }}">
+                                
+                                <!-- Card Title (Tapping card or title opens deal for editing) -->
+                                <a href="{% url 'deal_update' deal.id %}" class="deal-title-link mb-2 text-truncate" title="Tap to edit deal">
+                                    {{ deal.title }}
+                                </a>
+
+                                <!-- Contact & Company Info -->
+                                <div class="text-muted small mb-2 d-flex align-items-center gap-1 text-truncate">
+                                    <i class="bi bi-person text-secondary"></i>
+                                    <span class="fw-medium text-dark">{{ deal.contact.full_name }}</span>
+                                    {% if deal.company %}
+                                        <span class="text-muted small">({{ deal.company.name }})</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Value in Rupees & Expected Close Date -->
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <div class="fw-bold text-primary">
+                                        ₹{{ deal.value|floatformat:2 }}
+                                    </div>
+                                    <div class="text-muted small d-flex align-items-center gap-1" title="Expected Close Date">
+                                        {% if deal.expected_close_date %}
+                                            <i class="bi bi-calendar3"></i>
+                                            <span>{{ deal.expected_close_date|date:"M d, Y" }}</span>
+                                        {% else %}
+                                            <span class="text-muted">&mdash;</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Owner Info (if assigned) -->
+                                {% if deal.owner %}
+                                    <div class="mt-2 text-muted small d-flex align-items-center gap-1">
+                                        <i class="bi bi-person-badge"></i>
+                                        <span>{{ deal.owner.first_name }}</span>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Phone & Touch: Large 'Move to stage' Button -->
+                                <div class="mt-3 pt-2 border-top">
+                                    <button type="button" 
+                                            class="btn btn-outline-primary btn-sm w-100 btn-touch open-move-modal-btn" 
+                                            data-deal-id="{{ deal.id }}" 
+                                            data-deal-title="{{ deal.title|escapejs }}" 
+                                            data-current-stage-id="{{ col.stage.id }}"
+                                            style="min-height: 44px; border-radius: 8px;">
+                                        <i class="bi bi-arrow-left-right me-1"></i> Move to stage
+                                    </button>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4 text-muted small">
+                                <em>No deals</em>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Phone & Touch Move Stage Modal -->
+<div class="modal fade" id="moveStageModal" tabindex="-1" aria-labelledby="moveStageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 14px;">
+            <form method="post" id="moveStageForm" action="">
+                {% csrf_token %}
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold" id="moveStageModalLabel">Move Deal to Stage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">
+                        Select a stage for <strong id="modalDealTitleText" class="text-dark"></strong>:
+                    </p>
+                    <div class="d-grid gap-2" id="modalStageList">
+                        {% for stage in stages %}
+                            <button type="submit" 
+                                    name="stage_id" 
+                                    value="{{ stage.id }}" 
+                                    class="btn btn-outline-secondary btn-touch text-start d-flex justify-content-between align-items-center modal-stage-option"
+                                    data-stage-id="{{ stage.id }}"
+                                    style="min-height: 48px; border-radius: 8px; font-weight: 500;">
+                                <span>{{ stage.name }}</span>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Helper to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // ---------------------------------------------------------------------
+        // 1. Phone & Touch: Move to Stage Modal Handler
+        // ---------------------------------------------------------------------
+        const moveStageModalEl = document.getElementById('moveStageModal');
+        let moveStageModal = null;
+        if (moveStageModalEl) {
+            moveStageModal = new bootstrap.Modal(moveStageModalEl);
+        }
+
+        const moveStageForm = document.getElementById('moveStageForm');
+        const modalDealTitleText = document.getElementById('modalDealTitleText');
+        const modalStageOptions = document.querySelectorAll('.modal-stage-option');
+
+        document.querySelectorAll('.open-move-modal-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const dealId = this.getAttribute('data-deal-id');
+                const dealTitle = this.getAttribute('data-deal-title');
+                const currentStageId = this.getAttribute('data-current-stage-id');
+
+                modalDealTitleText.textContent = dealTitle;
+                moveStageForm.action = `/deals/${dealId}/move/`;
+
+                modalStageOptions.forEach(opt => {
+                    if (opt.getAttribute('data-stage-id') === currentStageId) {
+                        opt.classList.remove('btn-outline-secondary');
+                        opt.classList.add('btn-primary');
+                        opt.innerHTML = `<span>${opt.querySelector('span').textContent} <small>(Current)</small></span> <i class="bi bi-check-lg"></i>`;
+                    } else {
+                        opt.classList.remove('btn-primary');
+                        opt.classList.add('btn-outline-secondary');
+                        const spanText = opt.querySelector('span').textContent.replace(' (Current)', '');
+                        opt.innerHTML = `<span>${spanText}</span> <i class="bi bi-chevron-right text-muted"></i>`;
+                    }
+                });
+
+                if (moveStageModal) {
+                    moveStageModal.show();
+                }
+            });
+        });
+
+        // ---------------------------------------------------------------------
+        // 2. Desktop: Drag-and-Drop Stage Movement
+        // ---------------------------------------------------------------------
+        const cards = document.querySelectorAll('.deal-card');
+        const dropZones = document.querySelectorAll('.stage-drop-zone');
+
+        cards.forEach(card => {
+            card.addEventListener('dragstart', function (e) {
+                e.dataTransfer.setData('text/plain', this.getAttribute('data-deal-id'));
+                e.dataTransfer.setData('source-stage-id', this.getAttribute('data-current-stage-id'));
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            card.addEventListener('dragend', function () {
+                this.classList.remove('dragging');
+            });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', function () {
+                this.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+
+                const dealId = e.dataTransfer.getData('text/plain');
+                const sourceStageId = e.dataTransfer.getData('source-stage-id');
+                const targetStageId = this.getAttribute('data-stage-id');
+
+                if (!dealId || !targetStageId || sourceStageId === targetStageId) {
+                    return;
+                }
+
+                // Execute move via POST
+                fetch(`/deals/${dealId}/move/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `stage_id=${encodeURIComponent(targetStageId)}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Could not move deal. Please try again.');
+                    }
+                })
+                .catch(() => {
+                    alert('An error occurred while moving the deal.');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,266 @@
+{% extends "app_base.html" %}
+
+{% block title %}Kine Logo Options Preview | KinetiQ Dev{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Notice -->
+    <div class="card border-warning mb-4 shadow-sm" style="border-left: 5px solid #F59E0B;">
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark" style="font-family: var(--crm-font-heading);">
+                        <i class="bi bi-palette text-warning me-2"></i>Kine Logo Options Preview (Developer Mode Only)
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        This preview page is active <strong>only when DEBUG=True</strong> (returns 404 in production).
+                        Compare the 3 inline SVG options at multiple sizes on light and dark backgrounds.
+                    </p>
+                </div>
+                <span class="badge bg-warning text-dark px-3 py-2 fs-6">
+                    <i class="bi bi-code-slash me-1"></i>DEBUG Only
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style for Thinking Glow Animation -->
+    <style>
+        .kine-thinking-glow {
+            animation: kineLogoGlow 2s ease-in-out infinite;
+        }
+        @keyframes kineLogoGlow {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 0 rgba(99, 102, 241, 0));
+            }
+            50% {
+                transform: scale(1.06);
+                filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .kine-thinking-glow {
+                animation: none !important;
+            }
+        }
+    </style>
+
+    <!-- Logo Comparison Grid -->
+    <div class="row g-4">
+        <!-- ============================================================= -->
+        <!-- OPTION 1 CARD                                                 -->
+        <!-- ============================================================= -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--crm-border);">
+                <div class="card-header py-3 text-white" style="background: linear-gradient(135deg, #4F46E5 0%, #1E1B4B 100%);">
+                    <span class="badge bg-white text-primary fw-bold mb-1">Option 1</span>
+                    <h5 class="card-title mb-0 fw-bold">Chat-Stem & Radiant Spark K</h5>
+                    <small class="text-white-50">Clean geometry • Speech tail stem • 4-point spark</small>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">
+                        Vertical pill stem with a subtle speech-pointer at the base, upper diagonal arm terminating in a brilliant 4-point radiant spark, and grounded lower diagonal leg.
+                    </p>
+
+                    <!-- On Light Background -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">On Light Background</h6>
+                    <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-around flex-wrap gap-2 border bg-light">
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=24 id_suffix="opt1-24l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">24px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=32 id_suffix="opt1-32l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">32px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=48 id_suffix="opt1-48l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">48px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=64 id_suffix="opt1-64l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">64px</div>
+                        </div>
+                    </div>
+
+                    <!-- On Dark Background -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">On Dark Background</h6>
+                    <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-around flex-wrap gap-2 border" style="background: #0F172A; border-color: #334155 !important;">
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=24 id_suffix="opt1-24d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">24px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=32 id_suffix="opt1-32d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">32px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=48 id_suffix="opt1-48d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">48px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=1 size=64 id_suffix="opt1-64d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">64px</div>
+                        </div>
+                    </div>
+
+                    <!-- Thinking Animation Preview -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Thinking Animation (64px)</h6>
+                    <div class="p-3 rounded-3 text-center border bg-light">
+                        {% include "components/kine_logo.html" with option=1 size=64 thinking=True id_suffix="opt1-glow" %}
+                        <div class="text-muted small mt-2">Soft glow & gentle scale animation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- OPTION 2 CARD                                                 -->
+        <!-- ============================================================= -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--crm-border);">
+                <div class="card-header py-3 text-white" style="background: linear-gradient(135deg, #4338CA 0%, #0F172A 100%);">
+                    <span class="badge bg-white text-indigo fw-bold mb-1" style="color: #4338CA;">Option 2</span>
+                    <h5 class="card-title mb-0 fw-bold">Dialogue Silhouette & Starburst K</h5>
+                    <small class="text-white-50">Integrated speech bubble • Bold K • Starburst</small>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">
+                        Subtle dialogue contour in the backdrop with crisp inner geometric 'K' lines, a speech pointer at the lower left, and a bright starburst spark.
+                    </p>
+
+                    <!-- On Light Background -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">On Light Background</h6>
+                    <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-around flex-wrap gap-2 border bg-light">
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=24 id_suffix="opt2-24l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">24px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=32 id_suffix="opt2-32l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">32px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=48 id_suffix="opt2-48l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">48px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=64 id_suffix="opt2-64l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">64px</div>
+                        </div>
+                    </div>
+
+                    <!-- On Dark Background -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">On Dark Background</h6>
+                    <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-around flex-wrap gap-2 border" style="background: #0F172A; border-color: #334155 !important;">
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=24 id_suffix="opt2-24d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">24px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=32 id_suffix="opt2-32d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">32px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=48 id_suffix="opt2-48d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">48px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=2 size=64 id_suffix="opt2-64d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">64px</div>
+                        </div>
+                    </div>
+
+                    <!-- Thinking Animation Preview -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Thinking Animation (64px)</h6>
+                    <div class="p-3 rounded-3 text-center border bg-light">
+                        {% include "components/kine_logo.html" with option=2 size=64 thinking=True id_suffix="opt2-glow" %}
+                        <div class="text-muted small mt-2">Soft glow & gentle scale animation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- OPTION 3 CARD                                                 -->
+        <!-- ============================================================= -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--crm-border);">
+                <div class="card-header py-3 text-white" style="background: linear-gradient(135deg, #6366F1 0%, #1E1B4B 100%);">
+                    <span class="badge bg-white text-indigo fw-bold mb-1" style="color: #6366F1;">Option 3</span>
+                    <h5 class="card-title mb-0 fw-bold">Dynamic Prism Spark K</h5>
+                    <small class="text-white-50">Modern chevron • Lavender glow • Tech-forward</small>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">
+                        Vertical pill with conversational cusp on the left, paired with dynamic chevron arms terminating in an energetic four-pointed sparkle burst.
+                    </p>
+
+                    <!-- On Light Background -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">On Light Background</h6>
+                    <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-around flex-wrap gap-2 border bg-light">
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=24 id_suffix="opt3-24l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">24px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=32 id_suffix="opt3-32l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">32px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=48 id_suffix="opt3-48l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">48px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=64 id_suffix="opt3-64l" %}
+                            <div class="text-muted" style="font-size: 0.7rem;">64px</div>
+                        </div>
+                    </div>
+
+                    <!-- On Dark Background -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">On Dark Background</h6>
+                    <div class="p-3 rounded-3 mb-3 d-flex align-items-center justify-content-around flex-wrap gap-2 border" style="background: #0F172A; border-color: #334155 !important;">
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=24 id_suffix="opt3-24d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">24px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=32 id_suffix="opt3-32d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">32px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=48 id_suffix="opt3-48d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">48px</div>
+                        </div>
+                        <div class="text-center">
+                            {% include "components/kine_logo.html" with option=3 size=64 id_suffix="opt3-64d" %}
+                            <div class="text-white-50" style="font-size: 0.7rem;">64px</div>
+                        </div>
+                    </div>
+
+                    <!-- Thinking Animation Preview -->
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Thinking Animation (64px)</h6>
+                    <div class="p-3 rounded-3 text-center border bg-light">
+                        {% include "components/kine_logo.html" with option=3 size=64 thinking=True id_suffix="opt3-glow" %}
+                        <div class="text-muted small mt-2">Soft glow & gentle scale animation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instruction Box -->
+    <div class="card mt-4 shadow-sm border-0" style="border-radius: 14px; background: #EEF2FF; border: 1px solid #C7D2FE;">
+        <div class="card-body p-3">
+            <h6 class="fw-bold text-primary mb-1">
+                <i class="bi bi-info-circle me-1"></i>How to choose your preferred logo:
+            </h6>
+            <p class="mb-0 small text-dark">
+                Review the options above. Tell me which option you prefer (<strong>Option 1</strong>, <strong>Option 2</strong>, or <strong>Option 3</strong>).
+                I will wire your chosen mark across the floating button, chat header, assistant reply avatars, and empty state!
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

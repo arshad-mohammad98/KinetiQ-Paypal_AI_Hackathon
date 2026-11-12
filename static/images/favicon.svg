@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="qBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="qAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#818CF8"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded squircle -->
+  <rect width="64" height="64" rx="16" fill="url(#qBg)"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" fill="none" stroke="#312E81" stroke-width="1"/>
+  <!-- Q Letterform -->
+  <g id="letter-q">
+    <!-- Q Ring -->
+    <path d="M 32 13 C 21.5 13 13 20.6 13 30 C 13 39.4 21.5 47 32 47 C 35.2 47 38.2 46.2 40.8 44.8 L 41.5 44.4 L 43.8 48 C 44.5 49.1 45.9 49.5 47 48.8 C 48.1 48.1 48.5 46.7 47.8 45.6 L 45.8 42.4 C 48.9 39.1 51 34.8 51 30 C 51 20.6 42.5 13 32 13 Z M 32 21 C 37.5 21 42 25 42 30 C 42 35 37.5 39 32 39 C 26.5 39 22 35 22 30 C 22 25 26.5 21 32 21 Z" fill="#FFFFFF"/>
+    <!-- Distinctive dynamic swoosh on Q's tail -->
+    <path d="M 38 41 L 49 52 C 50.2 53.2 52.2 53 53 51.5 C 53.8 50 53.2 48.2 51.8 47.2 L 43 40 Z" fill="url(#qAccent)"/>
+  </g>
+</svg>
+

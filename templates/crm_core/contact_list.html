@@ -1,0 +1,306 @@
+{% extends "app_base.html" %}
+
+{% block title %}Contacts{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary);">
+                Contacts
+            </h2>
+            <p class="text-muted mb-0">
+                Manage all people and decision makers across your client relationships.
+                {% if total_count > 0 %}
+                    <span class="badge bg-secondary-subtle text-secondary ms-1">{{ total_count }} total</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if request.user.is_admin_or_owner %}
+                <a href="{% url 'contact_export' %}?q={{ query|urlencode }}&status={{ status_filter|urlencode }}&company={{ company_filter|urlencode }}" class="btn btn-outline-secondary btn-touch px-3" title="Export matching contacts to CSV">
+                    <i class="bi bi-download me-1"></i>
+                    <span>Export CSV</span>
+                </a>
+                <a href="{% url 'contact_import' %}" class="btn btn-outline-primary btn-touch px-3" style="border-color: var(--crm-accent); color: var(--crm-accent);" title="Import contacts from CSV">
+                    <i class="bi bi-upload me-1"></i>
+                    <span>Import</span>
+                </a>
+            {% endif %}
+            <a href="{% url 'contact_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                <i class="bi bi-person-plus"></i>
+                <span>Add Contact</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
+                <!-- Search Box -->
+                <div class="col-12 col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" value="{{ query }}" class="form-control border-start-0 ps-0" placeholder="Search by name, email, phone, or title..." style="min-height: 44px;">
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-6 col-md-2">
+                    <select name="status" class="form-select" style="min-height: 44px;">
+                        <option value="">All Statuses</option>
+                        <option value="LEAD" {% if status_filter == 'LEAD' %}selected{% endif %}>Lead</option>
+                        <option value="CUSTOMER" {% if status_filter == 'CUSTOMER' %}selected{% endif %}>Customer</option>
+                        <option value="INACTIVE" {% if status_filter == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+
+                <!-- Company Filter -->
+                <div class="col-6 col-md-2">
+                    <select name="company" class="form-select" style="min-height: 44px;">
+                        <option value="">All Companies</option>
+                        {% for comp in companies %}
+                            <option value="{{ comp.pk }}" {% if company_filter == comp.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ comp.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Owner Filter -->
+                <div class="col-6 col-md-2">
+                    <select name="owner" class="form-select" style="min-height: 44px;">
+                        <option value="">All Owners</option>
+                        {% for member in team_members %}
+                            <option value="{{ member.pk }}" {% if owner_filter == member.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ member.first_name }} {{ member.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-6 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-touch flex-grow-1" style="background-color: var(--crm-accent); border: none;">
+                        Filter
+                    </button>
+                    {% if query or status_filter or company_filter or owner_filter %}
+                        <a href="{% url 'contact_list' %}" class="btn btn-outline-secondary btn-touch" title="Reset Filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if page_obj.object_list %}
+        <!-- Desktop Table View (>= 768px) -->
+        <div class="card border-0 shadow-sm d-none d-md-block" style="border-radius: 12px; overflow: hidden;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #F8FAFC;">
+                        <tr>
+                            <th class="ps-4 py-3 text-secondary text-uppercase small fw-semibold">Name</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Company</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Job Title</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Email</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Phone</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Status</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Owner</th>
+                            <th class="pe-4 py-3 text-secondary text-uppercase small fw-semibold text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in page_obj %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <a href="{% url 'contact_detail' contact.pk %}" class="fw-bold text-decoration-none" style="color: var(--crm-accent);">
+                                        {{ contact.full_name }}
+                                    </a>
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.company %}
+                                        <a href="{% url 'company_detail' contact.company.pk %}" class="text-decoration-none text-dark fw-medium">
+                                            <i class="bi bi-building text-muted me-1"></i> {{ contact.company.name }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">{{ contact.job_title|default:"&mdash;" }}</td>
+                                <td class="py-3">
+                                    <a href="mailto:{{ contact.email }}" class="text-decoration-none text-dark">
+                                        {{ contact.email }}
+                                    </a>
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.phone %}
+                                        <a href="tel:{{ contact.phone }}" class="text-decoration-none text-dark">
+                                            {{ contact.phone }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.status == 'LEAD' %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis">Lead</span>
+                                    {% elif contact.status == 'CUSTOMER' %}
+                                        <span class="badge bg-success-subtle text-success-emphasis">Customer</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if contact.owner %}
+                                        <span class="small fw-medium">{{ contact.owner.first_name }} {{ contact.owner.last_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    <div class="btn-group">
+                                        <a href="{% url 'contact_detail' contact.pk %}" class="btn btn-sm btn-outline-secondary" title="View Contact">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'contact_update' contact.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit Contact">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if request.user.is_admin_or_owner %}
+                                            <a href="{% url 'contact_delete' contact.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mobile Touch Cards (< 768px) -->
+        <div class="d-md-none d-flex flex-column gap-3">
+            {% for contact in page_obj %}
+                <div class="card border-0 shadow-sm p-3" style="border-radius: 12px;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <a href="{% url 'contact_detail' contact.pk %}" class="fs-5 fw-bold text-decoration-none text-dark d-block">
+                                {{ contact.full_name }}
+                            </a>
+                            {% if contact.company %}
+                                <div class="small fw-medium text-muted">
+                                    <i class="bi bi-building"></i> {{ contact.company.name }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if contact.status == 'LEAD' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis">Lead</span>
+                        {% elif contact.status == 'CUSTOMER' %}
+                            <span class="badge bg-success-subtle text-success-emphasis">Customer</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="small text-muted mb-3 d-flex flex-column gap-1">
+                        {% if contact.job_title %}
+                            <div><i class="bi bi-briefcase me-1"></i> {{ contact.job_title }}</div>
+                        {% endif %}
+                        <div><i class="bi bi-envelope me-1"></i> <a href="mailto:{{ contact.email }}" class="text-muted text-decoration-none">{{ contact.email }}</a></div>
+                        {% if contact.phone %}
+                            <div><i class="bi bi-telephone me-1"></i> <a href="tel:{{ contact.phone }}" class="text-muted text-decoration-none">{{ contact.phone }}</a></div>
+                        {% endif %}
+                        {% if contact.owner %}
+                            <div><i class="bi bi-person me-1"></i> Owner: {{ contact.owner.first_name }} {{ contact.owner.last_name }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <a href="{% url 'contact_detail' contact.pk %}" class="btn btn-sm btn-primary btn-touch flex-grow-1" style="background-color: var(--crm-accent); border: none;">
+                            View Details
+                        </a>
+                        <a href="{% url 'contact_update' contact.pk %}" class="btn btn-sm btn-outline-secondary btn-touch px-3" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if request.user.is_admin_or_owner %}
+                            <a href="{% url 'contact_delete' contact.pk %}" class="btn btn-sm btn-outline-danger btn-touch px-3" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+                <div class="text-muted small">
+                    Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if company_filter %}&company={{ company_filter }}{% endif %}{% if owner_filter %}&owner={{ owner_filter }}{% endif %}">
+                                    &laquo; Previous
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link" style="background-color: var(--crm-accent); border-color: var(--crm-accent);">
+                                {{ page_obj.number }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if company_filter %}&company={{ company_filter }}{% endif %}{% if owner_filter %}&owner={{ owner_filter }}{% endif %}">
+                                    Next &raquo;
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Friendly Empty State -->
+        <div class="card border-0 shadow-sm text-center py-5 px-3" style="border-radius: 14px;">
+            <div class="card-body py-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 72px; height: 72px; background-color: #EEF2FF; color: var(--crm-accent); font-size: 2rem;">
+                    <i class="bi bi-people"></i>
+                </div>
+                {% if query or status_filter or company_filter or owner_filter %}
+                    <h4 class="fw-bold mb-2">No matching contacts</h4>
+                    <p class="text-muted mb-4">No contacts match your active search and filter criteria.</p>
+                    <a href="{% url 'contact_list' %}" class="btn btn-outline-secondary btn-touch px-4">
+                        <i class="bi bi-x-circle me-1"></i> Clear Filters
+                    </a>
+                {% else %}
+                    <h4 class="fw-bold mb-2">No contacts yet</h4>
+                    <p class="text-muted mb-4" style="max-width: 450px; margin: 0 auto;">
+                        Start building your client relationships by adding your first lead or customer contact.
+                    </p>
+                    <a href="{% url 'contact_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                        <i class="bi bi-person-plus me-1"></i> Add your first contact
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

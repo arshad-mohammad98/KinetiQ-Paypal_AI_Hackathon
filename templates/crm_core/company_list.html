@@ -1,0 +1,251 @@
+{% extends "app_base.html" %}
+
+{% block title %}Companies{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary);">
+                Companies
+            </h2>
+            <p class="text-muted mb-0">
+                Manage your client accounts, partners, and organizations.
+                {% if total_count > 0 %}
+                    <span class="badge bg-secondary-subtle text-secondary ms-1">{{ total_count }} total</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if request.user.is_admin_or_owner %}
+                <a href="{% url 'company_export' %}{% if query %}?q={{ query|urlencode }}{% endif %}" class="btn btn-outline-secondary btn-touch px-3" title="Export matching companies to CSV">
+                    <i class="bi bi-download me-1"></i>
+                    <span>Export CSV</span>
+                </a>
+                <a href="{% url 'company_import' %}" class="btn btn-outline-primary btn-touch px-3" style="border-color: var(--crm-accent); color: var(--crm-accent);" title="Import companies from CSV">
+                    <i class="bi bi-upload me-1"></i>
+                    <span>Import</span>
+                </a>
+            {% endif %}
+            <a href="{% url 'company_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                <i class="bi bi-plus-lg"></i>
+                <span>Add Company</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-12 col-md-9">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" value="{{ query }}" class="form-control border-start-0 ps-0" placeholder="Search companies by name, industry, city, or phone..." style="min-height: 44px;">
+                        {% if query %}
+                            <a href="{% url 'company_list' %}" class="btn btn-outline-secondary d-flex align-items-center" title="Clear Search">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-outline-primary btn-touch w-100" style="border-color: var(--crm-accent); color: var(--crm-accent);">
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if page_obj.object_list %}
+        <!-- Desktop Table View (>= 768px) -->
+        <div class="card border-0 shadow-sm d-none d-md-block" style="border-radius: 12px; overflow: hidden;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #F8FAFC;">
+                        <tr>
+                            <th class="ps-4 py-3 text-secondary text-uppercase small fw-semibold">Company</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Industry</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">City</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Phone</th>
+                            <th class="py-3 text-secondary text-uppercase small fw-semibold">Contacts</th>
+                            <th class="pe-4 py-3 text-secondary text-uppercase small fw-semibold text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in page_obj %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <a href="{% url 'company_detail' company.pk %}" class="fw-bold text-decoration-none" style="color: var(--crm-accent);">
+                                        {{ company.name }}
+                                    </a>
+                                    {% if company.website %}
+                                        <div class="small">
+                                            <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer" class="text-muted text-decoration-none">
+                                                <i class="bi bi-link-45deg"></i> {{ company.website|truncatechars:35 }}
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {% if company.industry %}
+                                        <span class="badge bg-light text-dark border">{{ company.industry }}</span>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    {{ company.city|default:"&mdash;" }}
+                                </td>
+                                <td class="py-3">
+                                    {% if company.phone %}
+                                        <a href="tel:{{ company.phone }}" class="text-decoration-none text-dark">
+                                            <i class="bi bi-telephone text-muted me-1"></i> {{ company.phone }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    <span class="badge bg-info-subtle text-info-emphasis">
+                                        {{ company.contacts.count }} contact{{ company.contacts.count|pluralize }}
+                                    </span>
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    <div class="btn-group">
+                                        <a href="{% url 'company_detail' company.pk %}" class="btn btn-sm btn-outline-secondary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'company_update' company.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if request.user.is_admin_or_owner %}
+                                            <a href="{% url 'company_delete' company.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mobile Touch Cards (< 768px) -->
+        <div class="d-md-none d-flex flex-column gap-3">
+            {% for company in page_obj %}
+                <div class="card border-0 shadow-sm p-3" style="border-radius: 12px;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <a href="{% url 'company_detail' company.pk %}" class="fs-5 fw-bold text-decoration-none text-dark d-block">
+                                {{ company.name }}
+                            </a>
+                            {% if company.industry %}
+                                <span class="badge bg-light text-dark border mt-1">{{ company.industry }}</span>
+                            {% endif %}
+                        </div>
+                        <span class="badge bg-info-subtle text-info-emphasis">
+                            {{ company.contacts.count }} contact{{ company.contacts.count|pluralize }}
+                        </span>
+                    </div>
+
+                    <div class="small text-muted mb-3 d-flex flex-column gap-1">
+                        {% if company.city %}
+                            <div><i class="bi bi-geo-alt me-1"></i> {{ company.city }}</div>
+                        {% endif %}
+                        {% if company.phone %}
+                            <div><i class="bi bi-telephone me-1"></i> <a href="tel:{{ company.phone }}" class="text-muted text-decoration-none">{{ company.phone }}</a></div>
+                        {% endif %}
+                        {% if company.website %}
+                            <div><i class="bi bi-globe me-1"></i> <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer" class="text-muted text-decoration-none">{{ company.website|truncatechars:30 }}</a></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <a href="{% url 'company_detail' company.pk %}" class="btn btn-sm btn-primary btn-touch flex-grow-1" style="background-color: var(--crm-accent); border: none;">
+                            View Details
+                        </a>
+                        <a href="{% url 'company_update' company.pk %}" class="btn btn-sm btn-outline-secondary btn-touch px-3" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if request.user.is_admin_or_owner %}
+                            <a href="{% url 'company_delete' company.pk %}" class="btn btn-sm btn-outline-danger btn-touch px-3" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+                <div class="text-muted small">
+                    Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                    &laquo; Previous
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link" style="background-color: var(--crm-accent); border-color: var(--crm-accent);">
+                                {{ page_obj.number }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                    Next &raquo;
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Friendly Empty State -->
+        <div class="card border-0 shadow-sm text-center py-5 px-3" style="border-radius: 14px;">
+            <div class="card-body py-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 72px; height: 72px; background-color: #EEF2FF; color: var(--crm-accent); font-size: 2rem;">
+                    <i class="bi bi-building"></i>
+                </div>
+                {% if query %}
+                    <h4 class="fw-bold mb-2">No companies found</h4>
+                    <p class="text-muted mb-4">No results matched your search: "<strong>{{ query }}</strong>"</p>
+                    <a href="{% url 'company_list' %}" class="btn btn-outline-secondary btn-touch px-4">
+                        <i class="bi bi-x-circle me-1"></i> Clear Search Filter
+                    </a>
+                {% else %}
+                    <h4 class="fw-bold mb-2">No companies yet</h4>
+                    <p class="text-muted mb-4" style="max-width: 450px; margin: 0 auto;">
+                        Start organizing your client organizations and accounts by adding your first company.
+                    </p>
+                    <a href="{% url 'company_create' %}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                        <i class="bi bi-plus-lg me-1"></i> Add your first company
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

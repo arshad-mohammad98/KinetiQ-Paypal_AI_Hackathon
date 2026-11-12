@@ -1,0 +1,11 @@
+{# Reusable KinetiQ Wordmark Component #}
+{# Parameters: #}
+{#   theme: 'light' (default, for white/light surfaces) or 'dark' (for navy/slate topbars) #}
+{#   size: optional CSS class like 'fs-2', 'fs-3', 'fs-4', 'fs-5' #}
+{#   extra_class: optional extra CSS classes #}
+{% with logo_theme=theme|default:"light" logo_size=size|default:"" logo_extra=extra_class|default:"" %}
+<span class="kinetiq-wordmark kinetiq-wordmark-{{ logo_theme }} {{ logo_size }} {{ logo_extra }}" aria-label="KinetiQ">
+    <span class="kinetiq-wordmark-text">Kineti</span><span class="kinetiq-wordmark-q"><span class="kinetiq-q-char">Q</span><span class="kinetiq-q-tail" aria-hidden="true"></span></span>
+</span>
+{% endwith %}
+

@@ -1,0 +1,76 @@
+{% extends "app_base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 900px;">
+    <!-- Header -->
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">Workspace Settings</h2>
+        <p class="text-muted small mb-0">Manage organization details, team access, and data backups for <strong>{{ organization.name }}</strong>.</p>
+    </div>
+
+    <!-- Organization Overview Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px; background: #FFFFFF;">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-building-gear text-primary me-2"></i>Organization Profile</h5>
+        <div class="row g-3">
+            <div class="col-12 col-sm-6">
+                <label class="text-muted small fw-semibold text-uppercase">Organization Name</label>
+                <div class="fw-semibold text-dark fs-6">{{ organization.name }}</div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label class="text-muted small fw-semibold text-uppercase">Workspace Slug</label>
+                <div class="fw-semibold text-dark fs-6"><code>{{ organization.slug }}</code></div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label class="text-muted small fw-semibold text-uppercase">Subscription Plan</label>
+                <div>
+                    <span class="badge bg-primary-subtle text-primary fw-medium px-2 py-1">
+                        {{ organization.get_plan_status_display }}
+                    </span>
+                    {% if organization.plan_status == 'TRIAL' %}
+                        <span class="small text-muted ms-1">({{ organization.days_left_in_trial }} days remaining)</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label class="text-muted small fw-semibold text-uppercase">Team Seats</label>
+                <div class="fw-semibold text-dark fs-6">{{ organization.users.count }} / {{ organization.max_users }} Seats Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Export / Backup Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px; background: #FFFFFF; border-left: 4px solid var(--crm-accent) !important;">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-cloud-arrow-down-fill text-primary me-2"></i>Download all my data
+                </h5>
+                <p class="text-muted small mb-0" style="max-width: 550px;">
+                    Generate and download a complete ZIP archive containing separate CSV files for your <strong>companies, contacts, deals, tasks, and notes</strong>. Protects against CSV formula injection.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'download_all_data' %}" class="btn btn-primary btn-touch px-4 text-nowrap" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-file-earmark-zip me-1"></i> Download all my data (ZIP)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Team Link for Owner -->
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 12px; background: #FFFFFF;">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div>
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-people me-2 text-primary"></i>Team Members</h6>
+                <div class="text-muted small">Invite collaborators and manage user roles (Admin, Member).</div>
+            </div>
+            <a href="{% url 'team_list' %}" class="btn btn-outline-secondary btn-touch px-3" style="min-height: 38px;">
+                Manage Team &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

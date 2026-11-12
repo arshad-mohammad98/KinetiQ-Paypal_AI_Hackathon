@@ -1,0 +1,59 @@
+{% extends "app_base.html" %}
+
+{% block title %}Import Companies{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 800px;">
+    <!-- Breadcrumb & Header -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'company_list' %}" class="text-decoration-none">Companies</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Import</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">Import Companies</h2>
+            <p class="text-muted small mb-0">Upload a CSV file to add multiple companies to your KinetiQ workspace.</p>
+        </div>
+        <a href="{% url 'company_sample_csv' %}" class="btn btn-outline-primary btn-sm btn-touch px-3" style="min-height: 38px;">
+            <i class="bi bi-download me-1"></i> Download sample CSV
+        </a>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px; background: #FFFFFF;">
+        <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-info-circle text-primary me-2"></i>File Guidelines</h6>
+        <ul class="text-muted small mb-0 ps-3">
+            <li class="mb-1"><strong>Accepted format:</strong> <code>.csv</code> files only, up to 2 MB and 5,000 rows.</li>
+            <li class="mb-1"><strong>Required columns:</strong> <code>name</code>.</li>
+            <li class="mb-1"><strong>Optional columns:</strong> <code>industry</code>, <code>website</code>, <code>city</code>, <code>phone</code>.</li>
+            <li class="mb-1"><strong>Duplicates:</strong> Rows matching an existing company name in your business will be safely skipped.</li>
+            <li><strong>Encodings supported:</strong> UTF-8 (with or without BOM) and standard Excel exports.</li>
+        </ul>
+    </div>
+
+    <!-- Upload Form Card -->
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 12px; background: #FFFFFF;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="csvFileInput" class="form-label fw-semibold text-dark">Select CSV File</label>
+                <input class="form-control" type="file" id="csvFileInput" name="file" accept=".csv" required style="min-height: 44px;">
+                <div class="form-text">Choose a .csv file from your computer. Max size 2 MB.</div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between">
+                <a href="{% url 'company_list' %}" class="btn btn-outline-secondary btn-touch px-4">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-upload me-1"></i> Upload & Import
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

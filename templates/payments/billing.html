@@ -1,0 +1,80 @@
+{% extends "app_base.html" %}
+
+{% block title %}Workspace & Billing - KinetiQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 840px;">
+    <!-- Header -->
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">Workspace & Billing Status</h2>
+        <p class="text-muted small mb-0">Subscription status, trial duration, and commercial plan details for <strong>{{ organization.name }}</strong>.</p>
+    </div>
+
+    <!-- Current Subscription Status Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px; background: #FFFFFF; border-left: 4px solid var(--crm-accent) !important;">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
+            <div>
+                <span class="text-muted small fw-semibold text-uppercase">Current Plan</span>
+                <h3 class="fw-bold mb-0 text-dark">{{ plan_name }} Plan</h3>
+                <div class="fw-semibold text-primary mt-1">
+                    {{ plan_price_display }}
+                </div>
+            </div>
+
+            <div>
+                {% if subscription_state == 'active' %}
+                    <span class="badge bg-success text-white fs-6 px-3 py-2 rounded-pill">
+                        <i class="bi bi-patch-check-fill me-1"></i> Active Plan
+                    </span>
+                {% elif subscription_state == 'trial' %}
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">
+                        <i class="bi bi-clock-history me-1"></i> 14-Day Free Trial
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary text-white fs-6 px-3 py-2 rounded-pill">
+                        {{ subscription_state|title }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <hr class="my-3 text-muted opacity-25">
+
+        <div class="row g-3">
+            <div class="col-12 col-sm-6">
+                <label class="text-muted small fw-semibold text-uppercase">Trial Period Ends</label>
+                <div class="fw-semibold text-dark">{{ organization.trial_ends_at|date:"M d, Y" }} at {{ organization.trial_ends_at|time:"g:i A" }}</div>
+                <div class="small text-muted">
+                    {% if organization.days_left_in_trial > 0 %}
+                        {{ organization.days_left_in_trial }} days remaining
+                    {% else %}
+                        Ending today
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label class="text-muted small fw-semibold text-uppercase">Included Capabilities</label>
+                <div class="text-dark small">Full access to Contacts, Deals pipeline, Tasks, and PayPal Sandbox Invoicing.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hackathon Notice Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px; background: #FFFFFF;">
+        <div class="d-flex align-items-start gap-3">
+            <div class="p-3 rounded-3" style="background-color: #E0F2FE; color: #0070BA; font-size: 1.5rem;">
+                <i class="bi bi-paypal"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-dark mb-1">PayPal AI Hackathon Edition</h5>
+                <p class="text-muted small mb-3">
+                    In this hackathon edition, all CRM features and commercial PayPal Invoicing API v2 flows are unlocked for demonstration and evaluation.
+                </p>
+                <a href="{% url 'invoice_list' %}" class="btn btn-primary btn-touch px-3" style="background-color: #0070BA; border: none;">
+                    <i class="bi bi-receipt me-1"></i> View PayPal Invoices
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

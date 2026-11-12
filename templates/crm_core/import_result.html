@@ -1,0 +1,117 @@
+{% extends "app_base.html" %}
+
+{% block title %}Import Results - {{ type }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 900px;">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">{{ type }} Import Summary</h2>
+            <p class="text-muted small mb-0">Here are the detailed results of your recent CSV import.</p>
+        </div>
+        <div>
+            <a href="{{ back_url }}" class="btn btn-outline-secondary btn-touch px-3" style="min-height: 38px;">
+                &larr; Back to {{ type }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #10B981 !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3" style="background-color: #ECFDF5; color: #10B981; font-size: 1.5rem;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">IMPORTED</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ imported_count }}</h3>
+                        <div class="small text-muted">Successfully added</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #F59E0B !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3" style="background-color: #FEF3C7; color: #D97706; font-size: 1.5rem;">
+                        <i class="bi bi-copy"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">DUPLICATES SKIPPED</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ skipped_count }}</h3>
+                        <div class="small text-muted">Already existed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; border-left: 4px solid #EF4444 !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3" style="background-color: #FEE2E2; color: #EF4444; font-size: 1.5rem;">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">FAILED ROWS</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ failed_count }}</h3>
+                        <div class="small text-muted">Validation errors</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Failed Rows Table & Download Offer -->
+    {% if failures %}
+        <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px; background: #FFFFFF;">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Failed Rows Breakdown
+                    </h5>
+                    <div class="text-muted small">The following rows could not be imported. You can download them as a CSV to fix and re-import.</div>
+                </div>
+                <a href="{{ download_failed_url }}" class="btn btn-outline-danger btn-sm btn-touch px-3" style="min-height: 38px;">
+                    <i class="bi bi-download me-1"></i> Download Failed Rows (CSV)
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Row Number</th>
+                            <th>Failure Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in failures %}
+                            <tr>
+                                <td class="fw-semibold text-danger">Row {{ item.row }}</td>
+                                <td class="text-muted">{{ item.reason }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="card border-0 shadow-sm p-4 text-center mb-4" style="border-radius: 12px; background: #FFFFFF;">
+            <i class="bi bi-shield-check fs-1 text-success mb-2"></i>
+            <h5 class="fw-bold text-dark">Clean Import</h5>
+            <p class="text-muted small mb-0">No validation errors or failures occurred during this import process.</p>
+        </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-end">
+        <a href="{{ back_url }}" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+            Return to {{ type }} &rarr;
+        </a>
+    </div>
+</div>
+{% endblock %}
+

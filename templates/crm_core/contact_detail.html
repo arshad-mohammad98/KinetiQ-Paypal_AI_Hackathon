@@ -1,0 +1,355 @@
+{% extends "app_base.html" %}
+
+{% block title %}{{ contact.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="mb-3">
+        <a href="{% url 'contact_list' %}" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left"></i> Back to Contacts
+        </a>
+    </div>
+
+    <!-- Contact Profile Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px;">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3" style="background-color: #EEF2FF; color: var(--crm-accent); font-size: 2rem;">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h2 class="fw-bold mb-0" style="color: var(--crm-primary);">{{ contact.full_name }}</h2>
+                        {% if contact.status == 'LEAD' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis">Lead</span>
+                        {% elif contact.status == 'CUSTOMER' %}
+                            <span class="badge bg-success-subtle text-success-emphasis">Customer</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted mt-1">
+                        {% if contact.job_title %}{{ contact.job_title }}{% endif %}
+                        {% if contact.company %}
+                            at <a href="{% url 'company_detail' contact.company.pk %}" class="fw-medium text-decoration-none" style="color: var(--crm-accent);">
+                                {{ contact.company.name }}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'contact_update' contact.pk %}" class="btn btn-outline-secondary btn-touch px-3">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                {% if request.user.is_admin_or_owner %}
+                    <a href="{% url 'contact_delete' contact.pk %}" class="btn btn-outline-danger btn-touch px-3">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row g-3 mt-3 pt-3 border-top">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Email</div>
+                <div>
+                    <a href="mailto:{{ contact.email }}" class="fw-semibold text-decoration-none text-dark">
+                        {{ contact.email }}
+                    </a>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Phone</div>
+                <div>
+                    {% if contact.phone %}
+                        <a href="tel:{{ contact.phone }}" class="fw-semibold text-decoration-none text-dark">
+                            {{ contact.phone }}
+                        </a>
+                    {% else %}
+                        <span class="text-muted">&mdash;</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Assigned Owner</div>
+                <div class="fw-semibold">
+                    {% if contact.owner %}
+                        <i class="bi bi-person-badge text-muted me-1"></i> {{ contact.owner.first_name }} {{ contact.owner.last_name }}
+                    {% else %}
+                        <span class="text-muted">Unassigned</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-muted small">Created Date</div>
+                <div class="fw-semibold">{{ contact.created_at|date:"M d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Details Section -->
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <!-- Deals Section -->
+            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0 d-inline-block align-middle" style="color: var(--crm-primary);">
+                            Deals
+                        </h4>
+                        <span class="badge bg-secondary-subtle text-secondary fs-6 ms-2 align-middle">{{ deals.count }}</span>
+                    </div>
+                    <a href="{% url 'deal_create' %}?contact_id={{ contact.pk }}" class="btn btn-primary btn-touch px-3" style="background-color: var(--crm-accent); border: none;">
+                        <i class="bi bi-plus-lg me-1"></i> Add Deal
+                    </a>
+                </div>
+
+                {% if deals %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Deal Title</th>
+                                    <th>Stage</th>
+                                    <th>Value</th>
+                                    <th>Expected Close</th>
+                                    <th>Owner</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for deal in deals %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'deal_update' deal.pk %}" class="fw-semibold text-decoration-none text-dark">
+                                                {{ deal.title }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if deal.stage.is_won or deal.stage.name|lower == 'won' %}bg-success-subtle text-success{% elif deal.stage.is_lost or deal.stage.name|lower == 'lost' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %}">
+                                                {{ deal.stage.name }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold text-primary">₹{{ deal.value|floatformat:2 }}</td>
+                                        <td class="text-muted small">
+                                            {% if deal.expected_close_date %}
+                                                {{ deal.expected_close_date|date:"M d, Y" }}
+                                            {% else %}
+                                                &mdash;
+                                            {% endif %}
+                                        </td>
+                                        <td class="small">
+                                            {% if deal.owner %}
+                                                {{ deal.owner.first_name }} {{ deal.owner.last_name }}
+                                            {% else %}
+                                                <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{% url 'deal_update' deal.pk %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-kanban fs-3 d-block mb-2 text-secondary"></i>
+                        <p class="mb-2 small">No deals linked to this contact yet.</p>
+                        <a href="{% url 'deal_create' %}?contact_id={{ contact.pk }}" class="btn btn-sm btn-outline-primary btn-touch">
+                            <i class="bi bi-plus-lg me-1"></i> Add Deal
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tasks Section -->
+            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0 d-inline-block align-middle" style="color: var(--crm-primary);">
+                            Tasks & Follow-ups
+                        </h4>
+                        <span class="badge bg-secondary-subtle text-secondary fs-6 ms-2 align-middle">{{ tasks.count }}</span>
+                    </div>
+                    <a href="{% url 'task_create' %}?contact_id={{ contact.pk }}" class="btn btn-primary btn-touch px-3" style="background-color: var(--crm-accent); border: none;">
+                        <i class="bi bi-plus-lg me-1"></i> Add Task
+                    </a>
+                </div>
+
+                {% if tasks %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;"></th>
+                                    <th>Task Title</th>
+                                    <th>Type</th>
+                                    <th>Due Date</th>
+                                    <th>Assigned To</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                    <tr class="{% if task.is_overdue %}table-danger-subtle{% elif task.is_due_today %}table-warning-subtle{% endif %}">
+                                        <td>
+                                            <form method="post" action="{% url 'task_toggle_done' task.id %}">
+                                                {% csrf_token %}
+                                                {% if task.is_completed %}
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Undo">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Mark Done">
+                                                        <i class="bi bi-circle"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold {% if task.is_completed %}text-decoration-line-through text-muted{% else %}text-dark{% endif %}">
+                                                {{ task.title }}
+                                            </div>
+                                            {% if task.notes %}
+                                                <div class="text-muted small text-truncate" style="max-width: 250px;">{{ task.notes }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary-subtle text-secondary small">{{ task.get_task_type_display }}</span>
+                                        </td>
+                                        <td class="small">
+                                            {% if task.due_date %}
+                                                <span class="{% if task.is_overdue %}text-danger fw-bold{% elif task.is_due_today %}text-warning-emphasis fw-bold{% else %}text-muted{% endif %}">
+                                                    {{ task.due_date|date:"M d, Y" }}{% if task.due_time %} {{ task.due_time|time:"g:i A" }}{% endif %}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">&mdash;</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="small">
+                                            {% if task.assigned_to %}
+                                                {{ task.assigned_to.first_name }}
+                                            {% else %}
+                                                <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{% url 'task_update' task.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-check2-square fs-3 d-block mb-2 text-secondary"></i>
+                        <p class="mb-2 small">No tasks linked to this contact yet.</p>
+                        <a href="{% url 'task_create' %}?contact_id={{ contact.pk }}" class="btn btn-sm btn-outline-primary btn-touch">
+                            <i class="bi bi-plus-lg me-1"></i> Add Task
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Notes Timeline Section -->
+            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 14px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0" style="color: var(--crm-primary);">
+                        Notes Timeline
+                        <span class="badge bg-secondary-subtle text-secondary fs-6">{{ notes.count }}</span>
+                    </h4>
+                </div>
+
+                <!-- Add Note Form -->
+                <form method="post" class="mb-4 pb-4 border-bottom">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        {{ note_form.content }}
+                        {% if note_form.content.errors %}
+                            <div class="text-danger small mt-1">{{ note_form.content.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                            <i class="bi bi-chat-left-text me-1"></i> Add Note
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Notes List (Newest First) -->
+                {% if notes %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for note in notes %}
+                            <div class="p-3 rounded-3" style="background-color: #F8FAFC; border: 1px solid var(--crm-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; background-color: #EEF2FF; color: var(--crm-accent); font-size: 0.85rem;">
+                                            {% if note.author %}{{ note.author.first_name|slice:":1" }}{{ note.author.last_name|slice:":1" }}{% else %}?{% endif %}
+                                        </div>
+                                        <div>
+                                            <span class="fw-semibold small">
+                                                {% if note.author %}{{ note.author.first_name }} {{ note.author.last_name }}{% else %}System{% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-clock me-1"></i> {{ note.created_at|date:"M d, Y, g:i a" }}
+                                    </div>
+                                </div>
+                                <div class="text-secondary" style="white-space: pre-wrap; font-size: 0.95rem;">{{ note.content }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-chat-left-dots fs-3 d-block mb-2 text-secondary"></i>
+                        <p class="mb-0 small">No notes on this contact yet. Add a short note above to begin the timeline.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Company Sidebar (if linked) -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 14px;">
+                <h5 class="fw-bold mb-3" style="color: var(--crm-primary);">Company Info</h5>
+                {% if contact.company %}
+                    <div class="mb-2">
+                        <div class="fw-bold fs-5">{{ contact.company.name }}</div>
+                        {% if contact.company.industry %}
+                            <span class="badge bg-light text-dark border">{{ contact.company.industry }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="small text-muted mb-3">
+                        {% if contact.company.city %}
+                            <div><i class="bi bi-geo-alt me-1"></i> {{ contact.company.city }}</div>
+                        {% endif %}
+                        {% if contact.company.phone %}
+                            <div><i class="bi bi-telephone me-1"></i> {{ contact.company.phone }}</div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'company_detail' contact.company.pk %}" class="btn btn-sm btn-outline-primary btn-touch w-100" style="border-color: var(--crm-accent); color: var(--crm-accent);">
+                        View Company
+                    </a>
+                {% else %}
+                    <p class="text-muted small mb-3">This contact is not currently associated with any company.</p>
+                    <a href="{% url 'contact_update' contact.pk %}" class="btn btn-sm btn-outline-secondary btn-touch w-100">
+                        Assign Company
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

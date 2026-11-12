@@ -1,0 +1,146 @@
+{% extends "app_base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 720px; margin: 0 auto;">
+    <div class="mb-3">
+        <a href="{% url 'task_list' %}" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left"></i> Back to Tasks
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius: 14px;">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-3 rounded-3" style="background-color: #EEF2FF; color: var(--crm-accent); font-size: 1.5rem;">
+                    <i class="bi bi-check2-square"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0" style="color: var(--crm-primary);">{{ title }}</h3>
+                    <p class="text-muted small mb-0">Record actionable reminders, calls, meetings, and to-dos.</p>
+                </div>
+            </div>
+            {% if task and request.user.is_admin_or_owner %}
+                <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-touch btn-sm px-3">
+                    <i class="bi bi-trash"></i> Delete Task
+                </a>
+            {% endif %}
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Title & Type -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-8">
+                    <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">
+                        Task Title <span class="text-danger">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-sm-4">
+                    <label for="{{ form.task_type.id_for_label }}" class="form-label fw-semibold">
+                        Type <span class="text-danger">*</span>
+                    </label>
+                    {{ form.task_type }}
+                    {% if form.task_type.errors %}
+                        <div class="text-danger small mt-1">{{ form.task_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Due Date & Due Time -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.due_date.id_for_label }}" class="form-label fw-semibold">
+                        Due Date
+                    </label>
+                    {{ form.due_date }}
+                    {% if form.due_date.errors %}
+                        <div class="text-danger small mt-1">{{ form.due_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.due_time.id_for_label }}" class="form-label fw-semibold">
+                        Due Time (Optional)
+                    </label>
+                    {{ form.due_time }}
+                    {% if form.due_time.errors %}
+                        <div class="text-danger small mt-1">{{ form.due_time.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Deal & Contact -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.deal.id_for_label }}" class="form-label fw-semibold">
+                        Linked Deal (Optional)
+                    </label>
+                    {{ form.deal }}
+                    <div class="form-text text-muted small">
+                        If linked to a deal, the contact is taken from the deal.
+                    </div>
+                    {% if form.deal.errors %}
+                        <div class="text-danger small mt-1">{{ form.deal.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.contact.id_for_label }}" class="form-label fw-semibold">
+                        Linked Contact (Optional)
+                    </label>
+                    {{ form.contact }}
+                    {% if form.contact.errors %}
+                        <div class="text-danger small mt-1">{{ form.contact.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Assigned To -->
+            <div class="mb-3">
+                <label for="{{ form.assigned_to.id_for_label }}" class="form-label fw-semibold">
+                    Assigned To
+                </label>
+                {{ form.assigned_to }}
+                {% if form.assigned_to.errors %}
+                    <div class="text-danger small mt-1">{{ form.assigned_to.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-4">
+                <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold">
+                    Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 pt-3 border-top">
+                <a href="{% url 'task_list' %}" class="btn btn-outline-secondary btn-touch px-4">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-check-lg"></i> Save Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

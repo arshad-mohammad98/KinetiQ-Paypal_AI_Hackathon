@@ -1,0 +1,61 @@
+{% extends "app_base.html" %}
+
+{% block title %}Import Contacts{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 800px;">
+    <!-- Breadcrumb & Header -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'contact_list' %}" class="text-decoration-none">Contacts</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Import</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--crm-primary); letter-spacing: -0.5px;">Import Contacts</h2>
+            <p class="text-muted small mb-0">Upload a CSV file to add multiple contacts and link them to companies.</p>
+        </div>
+        <a href="{% url 'contact_sample_csv' %}" class="btn btn-outline-primary btn-sm btn-touch px-3" style="min-height: 38px;">
+            <i class="bi bi-download me-1"></i> Download sample CSV
+        </a>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px; background: #FFFFFF;">
+        <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-info-circle text-primary me-2"></i>File Guidelines</h6>
+        <ul class="text-muted small mb-0 ps-3">
+            <li class="mb-1"><strong>Accepted format:</strong> <code>.csv</code> files only, up to 2 MB and 5,000 rows.</li>
+            <li class="mb-1"><strong>Required columns:</strong> <code>name</code>.</li>
+            <li class="mb-1"><strong>Optional columns:</strong> <code>email</code>, <code>phone</code>, <code>job_title</code>, <code>company</code>, <code>status</code>.</li>
+            <li class="mb-1"><strong>Company matching:</strong> Matched case-insensitively within your business. If a company doesn't exist, it will be automatically created!</li>
+            <li class="mb-1"><strong>Status:</strong> Allowed values are <code>Lead</code>, <code>Customer</code>, or <code>Inactive</code> (defaults to <code>Lead</code>).</li>
+            <li class="mb-1"><strong>Duplicates:</strong> Rows matching an existing contact email in your business will be skipped.</li>
+            <li><strong>Owner:</strong> Imported contacts will be assigned to you as the owner.</li>
+        </ul>
+    </div>
+
+    <!-- Upload Form Card -->
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 12px; background: #FFFFFF;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="csvFileInput" class="form-label fw-semibold text-dark">Select CSV File</label>
+                <input class="form-control" type="file" id="csvFileInput" name="file" accept=".csv" required style="min-height: 44px;">
+                <div class="form-text">Choose a .csv file from your computer. Max size 2 MB.</div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between">
+                <a href="{% url 'contact_list' %}" class="btn btn-outline-secondary btn-touch px-4">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
+                    <i class="bi bi-upload me-1"></i> Upload & Import
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

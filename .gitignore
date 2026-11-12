@@ -1,0 +1,36 @@
+# Python & Virtual Environment
+venv/
+*.pyc
+*.pyo
+__pycache__/
+
+# Environment variables & secrets (CRITICAL: never commit)
+.env
+.env.*
+!.env.example
+
+# SQLite fallback / local database files
+*.sqlite3
+*.sqlite
+*.db
+
+# Static / Media runtime uploads & dev emails
+media/
+staticfiles/
+dev_emails/
+
+# Logs & Runtime files
+logs/
+*.log
+
+# Backups & Private Credentials
+backups/
+scripts/*.cnf
+!scripts/*.cnf.example
+
+# IDE / OS specific files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
