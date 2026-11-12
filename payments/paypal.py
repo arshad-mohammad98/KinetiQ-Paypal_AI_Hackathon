@@ -225,7 +225,7 @@ def create_draft_invoice(deal, recipient_email, amount, currency="USD", descript
     if deal.contact:
         contact_name = deal.contact.full_name[:40] or "Valued Customer"
 
-    payment_term = {"term_type": "DUE_ON_DATE" if due_date else "DUE_ON_RECEIPT"}
+    payment_term = {"term_type": "DUE_ON_DATE_SPECIFIED" if due_date else "DUE_ON_RECEIPT"}
     if due_date:
         if isinstance(due_date, (datetime.date, datetime.datetime)):
             payment_term["due_date"] = due_date.strftime("%Y-%m-%d")
