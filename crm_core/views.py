@@ -352,7 +352,7 @@ def deal_board_view(request):
         stages = Stage.objects.filter(organization=org).order_by("order")
 
     owner_filter = request.GET.get("owner", "").strip()
-    deals = Deal.objects.filter(organization=org).select_related("contact", "company", "stage", "owner")
+    deals = Deal.objects.filter(organization=org).select_related("contact", "company", "stage", "owner").prefetch_related("invoices")
 
     if owner_filter:
         if owner_filter == "unassigned":
@@ -469,7 +469,7 @@ def deal_update_view(request, pk):
 
     tasks = deal.tasks.filter(organization=org).select_related("assigned_to", "contact").order_by("is_completed", "due_date")
     invoice = deal.invoices.filter(organization=org).first()
-    is_won = bool(deal.stage and deal.stage.is_won)
+    is_won = bool(deal.stage and (deal.stage.is_won or deal.stage.name.lower() == "won"))
     from payments.paypal import is_paypal_configured
     paypal_configured = is_paypal_configured()
 
@@ -557,6 +557,10 @@ def deal_move_view(request, pk):
                 "stage_name": new_stage.name,
                 "closed_date": str(deal.closed_date) if deal.closed_date else None,
             })
+
+        if new_stage.is_won or new_stage.name.lower() == "won":
+            messages.success(request, f"Deal '{deal.title}' moved to Won! You can now send an invoice via PayPal Sandbox below.")
+            return redirect(f"{reverse('deal_update', args=[deal.pk])}#paypal-invoicing")
 
         messages.success(request, f"Deal '{deal.title}' moved to {new_stage.name}.")
         return redirect("deal_board")

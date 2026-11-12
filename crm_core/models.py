@@ -207,7 +207,7 @@ class Deal(TenantModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.title} (₹{self.value})"
+        return f"{self.title} (${self.value})"
 
 
 class Task(TenantModel):

@@ -161,7 +161,7 @@
                         <i class="bi bi-kanban-fill"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-1 text-dark" id="openPipelineValueMetric">₹{{ total_open_pipeline_value|floatformat:2 }}</h3>
+                <h3 class="fw-bold mb-1 text-dark" id="openPipelineValueMetric">${{ total_open_pipeline_value|floatformat:2 }}</h3>
                 <div class="small text-muted">
                     <span class="fw-semibold text-dark">{{ open_deals_count }}</span> open deal{{ open_deals_count|pluralize }} in pipeline
                 </div>
@@ -177,7 +177,7 @@
                         <i class="bi bi-trophy-fill"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-1 text-dark" id="dealsWonValueMetric">₹{{ deals_won_value|floatformat:2 }}</h3>
+                <h3 class="fw-bold mb-1 text-dark" id="dealsWonValueMetric">${{ deals_won_value|floatformat:2 }}</h3>
                 <div class="d-flex align-items-center gap-1 small text-muted">
                     <span class="badge bg-success-subtle text-success-emphasis fw-medium px-2 py-1">
                         {{ deals_won_count }} won
@@ -497,9 +497,9 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Indian Rupee currency formatter
-        const formatRupee = (val) => {
-            return "₹" + Number(val).toLocaleString("en-IN", {
+        // Currency formatter
+        const formatCurrency = (val) => {
+            return "$" + Number(val).toLocaleString("en-US", {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             });
@@ -541,7 +541,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    return "Value: " + formatRupee(context.parsed.y);
+                                    return "Value: " + formatCurrency(context.parsed.y);
                                 }
                             }
                         }
@@ -551,7 +551,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function (val) {
-                                    return formatRupee(val);
+                                    return formatCurrency(val);
                                 }
                             },
                             grid: {
@@ -645,7 +645,7 @@
                                     const idx = context.dataIndex;
                                     const cnt = wonCounts[idx] || 0;
                                     return [
-                                        "Revenue: " + formatRupee(context.parsed.y),
+                                        "Revenue: " + formatCurrency(context.parsed.y),
                                         "Deals won: " + cnt
                                     ];
                                 }
@@ -657,7 +657,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function (val) {
-                                    return formatRupee(val);
+                                    return formatCurrency(val);
                                 }
                             },
                             grid: {

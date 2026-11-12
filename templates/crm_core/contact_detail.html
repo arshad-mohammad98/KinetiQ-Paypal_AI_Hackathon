@@ -134,7 +134,7 @@
                                                 {{ deal.stage.name }}
                                             </span>
                                         </td>
-                                        <td class="fw-bold text-primary">₹{{ deal.value|floatformat:2 }}</td>
+                                        <td class="fw-bold text-primary">${{ deal.value|floatformat:2 }}</td>
                                         <td class="text-muted small">
                                             {% if deal.expected_close_date %}
                                                 {{ deal.expected_close_date|date:"M d, Y" }}
