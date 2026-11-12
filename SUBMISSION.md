@@ -40,7 +40,7 @@ KinetiQ is an AI-powered, multi-tenant B2B CRM that directly bridges closed sale
   - Instant invoice dispatching (`POST /v2/invoicing/invoices/{id}/send`)
   - Real-time invoice status verification (`GET /v2/invoicing/invoices/{id}`)
   - 15-second network timeouts and error recovery on every external network call
-- **Google Gemini 1.5 Flash / OpenAI GPT-4o-mini:** Powers the Kine AI sales assistant with custom system prompts, context grounding, and function calling.
+- **Google Gemini 3.1 Flash-Lite / OpenAI GPT-4o-mini:** Powers the Kine AI sales assistant with custom system prompts, context grounding, and function calling.
 - **Google Antigravity:** The agentic development environment used to accelerate architectural design, automated test authoring, PayPal API integration, refactoring, and verification throughout the hackathon.
 - **Docker & Docker Compose:** Multi-container orchestration provisioning MySQL 8 and the Django application with automatic migrations and demo seeding in a single command.
 

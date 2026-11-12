@@ -207,7 +207,7 @@ In `.env`:
 ```env
 # For Google Gemini (Recommended):
 LLM_API_KEY=AIzaSy...your_gemini_key_here
-LLM_MODEL=gemini-1.5-flash
+LLM_MODEL=gemini-3.1-flash-lite
 
 # Or for OpenAI:
 LLM_API_KEY=sk-...your_openai_key_here

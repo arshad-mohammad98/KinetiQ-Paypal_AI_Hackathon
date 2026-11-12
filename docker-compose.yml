@@ -49,7 +49,7 @@ services:
       PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
       # Kine AI Assistant Provider (Gemini / OpenAI API Key)
       LLM_API_KEY: ${LLM_API_KEY:-}
-      LLM_MODEL: ${LLM_MODEL:-gemini-1.5-flash}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.1-flash-lite}
     depends_on:
       db:
         condition: service_healthy

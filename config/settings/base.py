@@ -205,7 +205,7 @@ LOGGING = {
 
 # Kine AI Assistant (Stage 1 Read-Only Chat)
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.1-flash-lite")
 LLM_API_URL = os.getenv("LLM_API_URL", "")
 KINE_USER_DAILY_LIMIT = int(os.getenv("KINE_USER_DAILY_LIMIT", "50"))
 KINE_ORG_DAILY_LIMIT = int(os.getenv("KINE_ORG_DAILY_LIMIT", "200"))

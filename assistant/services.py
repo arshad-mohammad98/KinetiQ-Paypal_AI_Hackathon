@@ -237,7 +237,7 @@ def call_llm_api(messages, tools=None, timeout=10, system_prompt=None):
     using the standard library urllib.
     """
     api_key = getattr(settings, "LLM_API_KEY", "") or os.getenv("LLM_API_KEY", "")
-    model = getattr(settings, "LLM_MODEL", "") or os.getenv("LLM_MODEL", "gemini-1.5-flash")
+    model = getattr(settings, "LLM_MODEL", "") or os.getenv("LLM_MODEL", "gemini-3.1-flash-lite")
     api_url = getattr(settings, "LLM_API_URL", "") or os.getenv("LLM_API_URL", "")
     max_tokens = getattr(settings, "KINE_MAX_REPLY_TOKENS", 400)
     active_prompt = system_prompt or SYSTEM_PROMPT
