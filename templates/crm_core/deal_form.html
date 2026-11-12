@@ -54,10 +54,10 @@
             <div class="row g-3 mb-3">
                 <div class="col-12 col-sm-6">
                     <label for="{{ form.value.id_for_label }}" class="form-label fw-semibold">
-                        Value in Rupees (₹) <span class="text-danger">*</span>
+                        Deal Value ($ USD) <span class="text-danger">*</span>
                     </label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light text-muted fw-bold">₹</span>
+                        <span class="input-group-text bg-light text-muted fw-bold">$</span>
                         {{ form.value }}
                     </div>
                     {% if form.value.errors %}
@@ -77,10 +77,26 @@
 
             <!-- Contact & Company Info -->
             <div class="mb-3">
-                <label for="{{ form.contact.id_for_label }}" class="form-label fw-semibold">
-                    Contact <span class="text-danger">*</span>
-                </label>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label for="{{ form.contact.id_for_label }}" class="form-label fw-semibold mb-0">
+                        Contact <span class="text-danger">*</span>
+                    </label>
+                    <a href="{% url 'contact_create' %}?next={{ request.path|urlencode }}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.8rem;">
+                        <i class="bi bi-person-plus-fill me-1"></i>+ Add New Contact
+                    </a>
+                </div>
                 {{ form.contact }}
+                {% if not form.fields.contact.queryset.exists %}
+                    <div class="alert alert-warning py-2 px-3 mt-2 d-flex align-items-center justify-content-between">
+                        <div class="small">
+                            <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                            <strong>No contacts found:</strong> Deals must be linked to a customer contact. Please create a contact first.
+                        </div>
+                        <a href="{% url 'contact_create' %}?next={{ request.path|urlencode }}" class="btn btn-sm btn-primary ms-3 text-nowrap">
+                            <i class="bi bi-person-plus-fill me-1"></i>Create Contact
+                        </a>
+                    </div>
+                {% endif %}
                 <div class="form-text text-muted small">
                     <i class="bi bi-info-circle me-1"></i> The company is automatically associated based on the selected contact.
                 </div>

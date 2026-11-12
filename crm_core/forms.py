@@ -68,7 +68,7 @@ class DealForm(forms.ModelForm):
             "owner": forms.Select(attrs={"class": "form-select"}),
         }
         labels = {
-            "value": "Value (₹ in Rupees)",
+            "value": "Value ($ USD)",
             "expected_close_date": "Expected Close Date",
         }
 
@@ -76,8 +76,12 @@ class DealForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.organization = organization
         if organization:
-            self.fields["contact"].queryset = Contact.objects.filter(organization=organization).select_related("company")
-            self.fields["contact"].empty_label = "-- Select Contact (Required) --"
+            contact_qs = Contact.objects.filter(organization=organization).select_related("company")
+            self.fields["contact"].queryset = contact_qs
+            if not contact_qs.exists():
+                self.fields["contact"].empty_label = "-- No Contacts in Business (Add Contact First) --"
+            else:
+                self.fields["contact"].empty_label = "-- Select Contact (Required) --"
             self.fields["stage"].queryset = Stage.objects.filter(organization=organization).order_by("order")
             self.fields["stage"].empty_label = "-- Select Stage (Required) --"
             self.fields["owner"].queryset = User.objects.filter(organization=organization, is_active=True).order_by("first_name", "last_name")

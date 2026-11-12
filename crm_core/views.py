@@ -227,6 +227,10 @@ def contact_create_view(request):
 
             log_audit(request, "CREATE", contact)
             messages.success(request, f"Contact '{contact.full_name}' created successfully.")
+            next_url = request.POST.get("next") or request.GET.get("next")
+            if next_url and next_url.startswith("/"):
+                sep = "&" if "?" in next_url else "?"
+                return redirect(f"{next_url}{sep}contact_id={contact.pk}")
             return redirect("contact_detail", pk=contact.pk)
     else:
         initial = {}
@@ -234,7 +238,8 @@ def contact_create_view(request):
             initial["company"] = prefill_company
         form = ContactForm(organization=org, initial=initial)
 
-    return render(request, "crm_core/contact_form.html", {"form": form, "title": "Add Contact"})
+    next_url = request.GET.get("next", "")
+    return render(request, "crm_core/contact_form.html", {"form": form, "title": "Add Contact", "next": next_url})
 
 
 @login_required

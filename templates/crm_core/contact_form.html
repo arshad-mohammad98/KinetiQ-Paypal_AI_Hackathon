@@ -24,6 +24,9 @@
 
             <form method="post" novalidate>
                 {% csrf_token %}
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
 
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger">
@@ -108,7 +111,7 @@
                 </div>
 
                 <div class="d-flex gap-2 justify-content-end pt-3 border-top">
-                    <a href="{% if contact %}{% url 'contact_detail' contact.pk %}{% else %}{% url 'contact_list' %}{% endif %}" class="btn btn-outline-secondary btn-touch px-4">
+                    <a href="{% if next %}{{ next }}{% elif contact %}{% url 'contact_detail' contact.pk %}{% else %}{% url 'contact_list' %}{% endif %}" class="btn btn-outline-secondary btn-touch px-4">
                         Cancel
                     </a>
                     <button type="submit" class="btn btn-primary btn-touch px-4" style="background-color: var(--crm-accent); border: none;">
